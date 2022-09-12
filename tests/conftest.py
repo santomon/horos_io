@@ -1,5 +1,6 @@
 import os.path
 
+import pandas as pd
 import pytest
 
 
@@ -41,6 +42,11 @@ def horos_contour_info_path(horos_test_root):
 @pytest.fixture()
 def horos_image_info_path(horos_test_root):
     return os.path.join(horos_test_root, "test_image_info.csv")
+
+
+@pytest.fixture()
+def log_dummy():
+    return pd.read_csv("./tests/visual_confirmation.csv", index_col=0)
 
 
 def pytest_addoption(parser):

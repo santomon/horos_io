@@ -27,6 +27,8 @@ packages = [
 python = ">=3.8"
 click = "*"
 pandas = "^1.4.4"
+pydicom = "^2.3.0"
+matplotlib = "^3.5.3"
 
 [tool.poetry.dev-dependencies]
 bumpversion = "*"

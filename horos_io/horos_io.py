@@ -35,11 +35,10 @@ to the reading function to get the correct order of images
 CAVE: currently does not respect the fact, that we could have non-CINEs in our data
 """
 import os
-import pathlib
 import re
 import xml.etree.ElementTree as ET
 from functools import partial
-from typing import Union, Callable, Dict, Optional, NoReturn, List
+from typing import Union, Callable, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -51,10 +50,11 @@ from ._utils import __always_true, globSSF, _to_str
 Path = Union[os.PathLike, str]
 
 
-def load_sequence(path_to_sequence: Path, basal_first: bool) -> np.ndarray:
+def load_sequence(path_to_sequence: Path, basal_first: bool = False) -> np.ndarray:
     """
     convenience function to let the algorithm decide, if it is lax or sax;
     will need to pass basal_first though, just in case...
+    even though
 
     a problem is, is that sequences can be repeated multiple times,
     the first code in IM-XXXX-0001.dcm or IM-XXXX-0001-0001.dcm denotes this;
@@ -73,7 +73,7 @@ def load_lax_sequence(path_to_sequence: Path) -> np.ndarray:
     """
     returns a numpy array, where the contents of the array are pydicom.FileDataset of the images of shape
     (n_frames,)
-    the indices correspond to the frame in the vidoe
+    the indices correspond to the frame in the video
     Args:
         path_to_sequence:
     Returns:  np-array of the long axis images
@@ -86,7 +86,7 @@ def load_lax_sequence(path_to_sequence: Path) -> np.ndarray:
         for f in range(n_frames)])
 
 
-def load_sax_sequence(path_to_sequence: Path, basal_first: bool) -> np.ndarray:
+def load_sax_sequence(path_to_sequence: Path, basal_first: bool = False) -> np.ndarray:
     """
         returns a numpy array, where the contents of the array are pydicom.FileDataset of the images of shape
     (n_frames, n_slices)
@@ -122,6 +122,8 @@ def load_horos_contour(path_to_contour: Path, sequence: Union[np.ndarray, tuple,
              the entries are 0, if no contour, an instance of List[Tuple[float, flaot]], if it exists,
              to get a mask of existing contours, simply do:
              result != 0
+
+             if an omega contour; will instead return a dict[contournames, contour]
     """
     if len(sequence) == 2:
         n_frames, n_slices = sequence
@@ -134,104 +136,7 @@ def load_horos_contour(path_to_contour: Path, sequence: Union[np.ndarray, tuple,
     if "omega" not in path_to_contour:
         return _load_horos_contour(path_to_contour, n_frames, n_slices)
     else:
-        return load_omega_contour(path_to_contour, n_frames, n_slices)
-
-
-def _make_image_info_csv(root: Path, basal_info_file: Optional[str] = None,
-                         out: Optional[Path] = None) -> NoReturn:
-    """
-    one-time operation to update the information of the dataset;
-
-    basal_info_file is but a csv document, that contains, if the sax stack has basal slice first
-    in the sequence. is needed for having consistent ordering across sequences
-
-    columns:
-    ("seq_path",  <relative path starting from the root of the data>
-     "location",  <relative path starting from the source root..., actually, just ignore this>
-     "ID",        <Impression_Cmr{ID}>
-     "slice_type", one of config.slice_types
-     "n_frames",
-     "n_slices",
-     "basal_first", one of NA, True or False; only relevant for loading SAX in correct order)
-
-    seq_path is relative to the root
-    location is path relative to the source_root (ventricular-function/container/files)
-
-    creates a csv file containing location of the sequence.
-    sequence can be loaded with load_sequence
-    Args:
-        root: root of the data; contents should be directories of Impression Studies
-        out: optional parameter to specify, what and where to save
-    Returns:
-    """
-
-    if basal_info_file is None:
-        basal_info_file = os.path.join(root, "basal_info.csv")
-
-    basal_firsts = _load_basaL_first_as_list(basal_info_file)
-    result = pd.DataFrame()
-
-    result["seq_path"] = globSSF("*/*/*/", root_dir=root)
-    result["ID"] = result["seq_path"].apply(lambda loc: pathlib.Path(loc).parts[0])  # ID is name of the first folder
-    result["location"] = [os.path.normpath(os.path.join(root, seq_path))
-                          for seq_path in globSSF("*/*/*/", root_dir=root)]
-    result["slice_type"] = result["location"].apply(_get_slice_type)
-    result["n_frames"] = result["location"].apply(_get_n_frames_from_seq_path)
-    result["n_slices"] = result["location"].apply(_get_n_slices_from_seq_path)
-
-    # true if sax and contained in basal_first
-    # NaN if lax
-    result["basal_first"] = result.apply(lambda row: re.findall(r"\d{4}", row["ID"])[0] in basal_firsts
-    if row["slice_type"] == "cine_sa" else pd.NA, axis=1)
-
-    if out is None:
-        out = os.path.normpath(os.path.join(root, "image_info.csv"))
-    result.sort_values(by="ID").to_csv(out)
-
-
-def _make_contour_info_csv(root: Path, out: Optional[Path] = None) -> NoReturn:
-    """
-    one-time operation to update the information of the dataset;
-
-    ("ID": <Impression_Cmr{ID}>,
-     "contour_path": relative path to the contour file, starting from root of the data,
-     "contour_type": one of config.contour_types,
-     "location": relative path to the contour file, starting from source [IGNORE],
-     "slice_type": one of config.slice_types,
-     "c
-    )
-
-    creates a csv file containing location of all contour files; or whether they exist at all.
-    Args:
-        root: root of the data; contents should be directories of Impression Studies
-    Returns:
-    """
-
-    result = pd.concat([_make_contour_info_csv_by_contour_type(root, contour_type)
-                        for contour_type in config.contour_types], ignore_index=True)
-
-    result["location"] = result["contour_path"].apply(
-        lambda path: os.path.normpath(os.path.join(root, path)) if pd.notna(path) else ""
-    )
-    result["location"].replace("", pd.NA, inplace=True)
-    if out is None:
-        out = os.path.normpath(os.path.join(root, "contour_info.csv"))
-    result.sort_values(by="ID").to_csv(out)
-
-
-def _make_contour_info_csv_by_contour_type(root: Path, contour_type: str) -> pd.DataFrame:
-    result = pd.DataFrame()
-    result["ID"] = globSSF(f"Impression*", root_dir=root)
-    result["contour_path"] = result["ID"].apply(
-        lambda id_: os.path.join(id_, f"{contour_type}.xml")
-        if os.path.isfile(os.path.join(root, id_, f"{contour_type}.xml"))
-        else ""
-    )
-    result["slice_type"] = result["contour_path"].apply(lambda x: _get_slice_type(contour_type))
-
-    result["contour_path"].replace("", pd.NA, inplace=True)
-    result["contour_type"] = contour_type
-    return result
+        return _load_omega_contour(path_to_contour, n_frames, n_slices)
 
 
 def _get_n_slices_from_seq_path(path_to_sequence: Path) -> int:
@@ -305,13 +210,15 @@ def _load_horos_contour(contour_path: Path, n_frames: int, n_slices: int,
     """
     there is no real inherent logic to this trash file format...
     i wouldnt bother trying to understand what all the indices mean...
+    anyway;
+    simply loads the contour from the contour path;
     Args:
-        contour_path:
-        n_frames:
-        n_slices:
-        filter_: takes an element at per-Image level (can have multiple ROIs; and decides on some criterion if it should be taken
-
-    Returns:
+        contour_path: path to contour .xml file
+        n_frames: number of frames of the corresponding sequence
+        n_slices: number of slices of the corresponding sequence; if 1-Dim; e.g. LAX, then 1 should be passed
+        filter_: takes an element at per-Image level (can have multiple ROIs; and decides on some criterion if it should be taken);
+                    CAVE: will overwrite contours if you dont filter for exactly one contour per image
+    Returns: ndarray in the shape of original dicoms, where each entry is either 0, if no contour, or a list of pixels (tuples)
 
     """
     tree = ET.parse(contour_path)
@@ -337,7 +244,7 @@ def _filter_by_contour_name(contour_name: str, elem: ET.Element) -> bool:
     return elem[17].text == contour_name
 
 
-def load_omega_contour(contour_path: Path, n_frames: int, n_slices: int) -> Dict[str, np.ndarray]:
+def _load_omega_contour(contour_path: Path, n_frames: int, n_slices: int) -> Dict[str, np.ndarray]:
     """
     Args:
         contour_path:
@@ -351,6 +258,17 @@ def load_omega_contour(contour_path: Path, n_frames: int, n_slices: int) -> Dict
     return {contour_name: _load_horos_contour(contour_path, n_frames, n_slices,
                                               filter_=partial(_filter_by_contour_name, contour_name))
             for contour_name in getattr(config, f"{omega}_names")}
+
+
+def sort_SAX_by_y(X: np.ndarray) -> np.ndarray:
+    """
+    Args:
+        X: a 2D short axis stack;
+        if dicom innolitics can be believed, we can assume that the Y-world axis increased the more dorsal
+        you go with respect to the patient. therefore, in a SAX stack, the most apical slice should have the smallest y;
+        we would be able to use this to sort the stack without relying on manually inputting the order
+    """
+    return np.array(sorted(X.T, key=lambda x: x[0].ImagePositionPatient[1])).T
 
 if __name__ == '__main__':
     pass

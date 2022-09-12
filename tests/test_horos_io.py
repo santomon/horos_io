@@ -6,7 +6,7 @@ contains tests for general functionality of loading contours, images and shit ex
 for tests regarding actual integrity of a horos dataset, refer to test_horos_dataset.py
 """
 # pylint: disable=redefined-outer-name
-
+import argparse
 import os
 import re
 import sys
@@ -18,7 +18,7 @@ import pytest
 from click.testing import CliRunner
 from matplotlib import pyplot as plt
 
-from horos_io import cli
+from horos_io import cli, load_sax_sequence
 from horos_io import horos_io
 from horos_io._utils import globSSF
 
@@ -52,14 +52,14 @@ def test_command_line_interface():
 
 
 def test__make_contour_info_csv_pipeline(horos_test_root: str):
-    horos_io._make_contour_info_csv(horos_test_root,
-                                    out=os.path.join(horos_test_root, "test_contour_info.csv"))
+    cli.make_contour_info_csv(horos_test_root,
+                                       out=os.path.join(horos_test_root, "test_contour_info.csv"))
     assert True
 
 
 def test__make_image_info_csv_pipeline(horos_test_root: str):
-    horos_io._make_image_info_csv(horos_test_root,
-                                  out=os.path.join(horos_test_root, "test_image_info.csv"))
+    cli.make_image_info_csv(horos_test_root,
+                                     out=os.path.join(horos_test_root, "test_image_info.csv"))
     assert True
 
 
@@ -155,3 +155,41 @@ def test__load_omega_4ch_contour():
         target = np.zeros_like(contours, dtype=bool)
         target[locs] = True
         assert all((contours != 0) == target)
+
+
+@pytest.mark.parametrize("sax_path, basal_first",
+                         [('Impression_Cmr0064\\Anonymous_Study - 0\\CINE_segmented_SAX_28\\', True),
+                          ('Impression_Cmr0067\\Anonymous_Study - 0\\CINE_segmented_SAX_53\\', False)])
+def test_sort_sax_by_y(sax_path, horos_test_root, basal_first):
+    """
+    test to see if we can load SAX Stack in right order without relying on manual confirmation
+    """
+    pth = os.path.normpath(os.path.join(horos_test_root, sax_path))
+    sax_manual = load_sax_sequence(pth, basal_first=basal_first)
+    sax_by_y = horos_io.sort_SAX_by_y(load_sax_sequence(pth, basal_first=False))
+    for by_y, manual in zip(sax_by_y.flatten(), sax_manual.flatten()):
+        assert (by_y.pixel_array == manual.pixel_array).all()
+
+
+
+
+def sax_method_iter():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--pth")
+    args, _ = parser.parse_known_args()
+    if args.pth is not None:
+        image_info = pd.read_csv(os.path.join(args.pth, "image_info.csv"), index_col=0)
+        for i, row in image_info[image_info["slice_type"] == "cine_sa"].iterrows():
+            full_seq_path = os.path.normpath(os.path.join(args.pth, row["seq_path"]))
+            yield full_seq_path, row
+    else:
+        yield None, None # dummy values
+
+@pytest.mark.skipif(not "--pth" in sys.argv, reason="this test is only to be run when specifying a path to a dataset")
+@pytest.mark.parametrize("full_seq_path, row", sax_method_iter())
+def test_sort_sax_by_y_hard(full_seq_path, row):
+    """yaaay"""
+    sax_manual = load_sax_sequence(full_seq_path, row["basal_first"])
+    sax_by_y = horos_io.sort_SAX_by_y(load_sax_sequence(full_seq_path, False))
+    for s_manual, s_by_y in zip(sax_manual.flatten(), sax_by_y.flatten()):
+        assert (s_manual.pixel_array == s_by_y.pixel_array).all()

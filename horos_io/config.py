@@ -23,3 +23,5 @@ omega_types = ("omega_4ch", "omega_3ch", "omega_2ch", "omega_sax")
 
 #TODO: omega_3ch_names, omega_2ch_names, omega_sax_names
 omega_4ch_names = ("rv_vol", "lv_vol", "ra", "la", "lv_wall")  # now also denotes plotting order
+
+time_format = "%Y/%m/%d, %H:%M:%S"

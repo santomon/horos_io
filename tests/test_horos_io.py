@@ -148,7 +148,7 @@ def test_visually_confirm_ordering(horos_image_info_path, horos_contour_info_pat
 
 def test__load_omega_4ch_contour():
     pth = "tests/omega_4ch.xml"
-    result = horos_io._load_omega_4ch_contour(pth, 25, 1)
+    result = horos_io.load_horos_contour(pth, (25, 1))
 
     for contour_name, contours in result.items():
         locs = np.array((0, 10))  # ED in frame 0 and ES in frame 10

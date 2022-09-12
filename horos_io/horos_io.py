@@ -37,18 +37,18 @@ CAVE: currently does not respect the fact, that we could have non-CINEs in our d
 import os
 import pathlib
 import re
-import typing
 import xml.etree.ElementTree as ET
 from functools import partial
+from typing import Union, Callable, Dict, Optional, NoReturn, List
 
 import numpy as np
 import pandas as pd
 import pydicom
 
-from horos_io import config
-from horos_io._utils import __always_true, globSSF, _to_str
+from . import config
+from ._utils import __always_true, globSSF, _to_str
 
-Path = typing.Union[os.PathLike, str]
+Path = Union[os.PathLike, str]
 
 
 def load_sequence(path_to_sequence: Path, basal_first: bool) -> np.ndarray:
@@ -107,8 +107,8 @@ def load_sax_sequence(path_to_sequence: Path, basal_first: bool) -> np.ndarray:
         for f in range(n_frames)])
 
 
-def load_horos_contour(path_to_contour: Path, sequence: typing.Union[np.ndarray, tuple, Path]) -> typing.Union[
-    np.ndarray, typing.Dict[str, np.ndarray]]:
+def load_horos_contour(path_to_contour: Path, sequence: Union[np.ndarray, tuple, Path]) -> Union[
+    np.ndarray, Dict[str, np.ndarray]]:
     """
     Args:
         path_to_contour: path should be a contour .xml file
@@ -134,12 +134,11 @@ def load_horos_contour(path_to_contour: Path, sequence: typing.Union[np.ndarray,
     if "omega" not in path_to_contour:
         return _load_horos_contour(path_to_contour, n_frames, n_slices)
     else:
-        omega = os.path.split(path_to_contour)[1].split(".")[0]
-        return _load_omega_contour(omega, path_to_contour, n_frames, n_slices)
+        return load_omega_contour(path_to_contour, n_frames, n_slices)
 
 
-def _make_image_info_csv(root: Path, basal_info_file: typing.Optional[str] = None,
-                         out: typing.Optional[Path] = None) -> typing.NoReturn:
+def _make_image_info_csv(root: Path, basal_info_file: Optional[str] = None,
+                         out: Optional[Path] = None) -> NoReturn:
     """
     one-time operation to update the information of the dataset;
 
@@ -190,7 +189,7 @@ def _make_image_info_csv(root: Path, basal_info_file: typing.Optional[str] = Non
     result.sort_values(by="ID").to_csv(out)
 
 
-def _make_contour_info_csv(root: Path, out: typing.Optional[Path] = None) -> typing.NoReturn:
+def _make_contour_info_csv(root: Path, out: Optional[Path] = None) -> NoReturn:
     """
     one-time operation to update the information of the dataset;
 
@@ -287,7 +286,7 @@ def _get_slice_type(path: Path) -> str:
         raise ValueError(f"unknown slice type with path: {path}")
 
 
-def _load_basaL_first_as_list(basal_first_file: Path) -> typing.List[str]:
+def _load_basaL_first_as_list(basal_first_file: Path) -> List[str]:
     basal_df = pd.read_csv(basal_first_file, dtype=str)
     return list(basal_df["basal_first"])
 
@@ -302,7 +301,7 @@ def _get_name_from_template(path_to_sequence: Path, template: str) -> str:
 
 
 def _load_horos_contour(contour_path: Path, n_frames: int, n_slices: int,
-                        filter_: typing.Callable[[ET.Element], bool] = __always_true) -> np.ndarray:
+                        filter_: Callable[[ET.Element], bool] = __always_true) -> np.ndarray:
     """
     there is no real inherent logic to this trash file format...
     i wouldnt bother trying to understand what all the indices mean...
@@ -310,6 +309,7 @@ def _load_horos_contour(contour_path: Path, n_frames: int, n_slices: int,
         contour_path:
         n_frames:
         n_slices:
+        filter_: takes an element at per-Image level (can have multiple ROIs; and decides on some criterion if it should be taken
 
     Returns:
 
@@ -337,64 +337,20 @@ def _filter_by_contour_name(contour_name: str, elem: ET.Element) -> bool:
     return elem[17].text == contour_name
 
 
-def _load_omega_contour(omega: str, contour_path: Path, n_frames: int, n_slices: int) -> typing.Dict[str, np.ndarray]:
+def load_omega_contour(contour_path: Path, n_frames: int, n_slices: int) -> Dict[str, np.ndarray]:
     """
     Args:
-        omega: tag used to identify the omega contour
         contour_path:
         n_frames:
         n_slices:
 
     Returns:
     """
+    # any contour should be named <Path>/omega_{slice_type}.xml
+    omega = os.path.split(contour_path)[1].split(".")[0]
     return {contour_name: _load_horos_contour(contour_path, n_frames, n_slices,
                                               filter_=partial(_filter_by_contour_name, contour_name))
             for contour_name in getattr(config, f"{omega}_names")}
 
-
-_load_omega_sax_contour: typing.Callable[[Path, int, int], typing.Dict[str, np.ndarray]] = partial(_load_omega_contour, "omega_sax")
-_laod_omega_2ch_contour: typing.Callable[[Path, int, int], typing.Dict[str, np.ndarray]] = partial(_load_omega_contour, "omega_2ch")
-_load_omega_3ch_contour: typing.Callable[[Path, int, int], typing.Dict[str, np.ndarray]] = partial(_load_omega_contour, "omega_3ch")
-_load_omega_4ch_contour: typing.Callable[[Path, int, int], typing.Dict[str, np.ndarray]] = partial(_load_omega_contour, "omega_4ch")
-
-
-def _rename_contour_files(root: str, rename_dict: typing.Optional[dict]) -> typing.NoReturn:
-    """
-    onetime io operation to fix namings of xml files
-
-    renames .xml and .roi_series files by dictionary, that lie in the impression folders:
-    root |--- Impression_CmrXXXX
-                    |---- lv_epi.xml
-                    |---- lv_epi.roi_series
-    Args:
-        root:
-        rename_dict:
-
-    Returns:
-    """
-    files = globSSF("Impression*/*.xml", root_dir=root) + globSSF("Impression*/*.rois_series", root_dir=root)
-    for f in files:
-        path, f_name = os.path.split(f)
-        f_name, f_ending = f_name.split(".")
-        if f_name in rename_dict.keys():
-            src = os.path.normpath(os.path.join(root, path, f"{f_name}.{f_ending}"))
-
-            dst = os.path.normpath(os.path.join(root, path, f"{rename_dict[f_name]}.{f_ending}"))
-            if os.path.isfile(dst):
-                raise FileExistsError(f"{dst} for {src} already exists")
-            os.rename(src, dst)
-
-
 if __name__ == '__main__':
-    # rename_dict = {
-    #     "lv_epi": "sax_lv_epi",
-    #     "lv_endo": "sax_lv_endo",
-    #     "lv_2ch": "lax_2ch_lv_wall",
-    #     "lv_3ch": "lax_3ch_lv_wall",
-    #     "lv_4ch": "lax_4ch_lv_wall"
-    # }
-    # _rename_contour_files("D:\LVMI_Ref\Data", rename_dict)
-
-    # _make_image_info_csv("D:\LVMI_Ref\CineDataToAnnotate")
-    # _make_contour_info_csv("D:\LVMI_Ref\CineDataToAnnotate")
     pass

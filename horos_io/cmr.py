@@ -46,7 +46,7 @@ from tqdm import tqdm
 from horos_io import config
 from horos_io.core import get_n_frames_from_seq_path, \
     get_n_slices_from_seq_path, _get_name_from_template, get_contour_info_by_type
-from ._utils import _to_str, globSSF, get_seq_paths
+from ._utils import _to_str, get_seq_paths
 
 Path = Union[os.PathLike, str]
 
@@ -160,13 +160,18 @@ def get_image_info(root: Path) -> pd.DataFrame:
     result = pd.DataFrame()
 
     result["seq_path"] = get_seq_paths(root)
+
     result["ID"] = result["seq_path"].apply(lambda loc: pathlib.Path(loc).parts[0])  # ID is name of the first folder
     result["location"] = [os.path.normpath(os.path.join(root, seq_path))
-                          for seq_path in globSSF("*/*/*/", root_dir=root)]
+                          for seq_path in get_seq_paths(root)]
     result["slice_type"] = result["location"].apply(_get_slice_type)
     result["n_frames"] = result["location"].apply(get_n_frames_from_seq_path)
     result["n_slices"] = result["location"].apply(get_n_slices_from_seq_path)
     result = result[["ID", "slice_type", "n_frames", "n_slices", "seq_path", "location"]]
+
+    if result.shape[0] == 0:
+        raise ValueError(f"could not find any images in {root}")
+
     return result.sort_values(by=["ID", "slice_type"])
 
 
@@ -188,6 +193,9 @@ def get_contour_info(root: Path) -> pd.DataFrame:
     result = pd.concat([get_contour_info_by_type(root, contour_type)
                         for contour_type in tqdm(config.contour_types)], ignore_index=True)
     result["slice_type"] = result["contour_type"].apply(lambda x: _get_slice_type(x))
+
+    if result.shape[0] == 0:
+        raise ValueError(f"could not find any contours in {root}")
 
     return result.sort_values(by=["ID", "slice_type", "contour_type"])
 

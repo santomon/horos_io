@@ -2,7 +2,7 @@
 module for working with horos images and contours. the dataformat is as follows:
 the names for anonymous study and the sequences are inconsistent
 
-ROOT |--- Impression0001
+ROOT |--- ID0
                  |---------   Anonymous_Study
                                     |------------ <LAX>
                                                     |----------- IM-0001-0001.dcm
@@ -15,7 +15,7 @@ ROOT |--- Impression0001
                  |--- sax_lv_endo.xml
                  |--- sax_lv_epi.xml
                  ...
-    |--- Impression0002
+    |--- ID1
                  |--- ...
                  ...
     ...
@@ -23,11 +23,6 @@ ROOT |--- Impression0001
 not that it really matters;
 for convenience, every location of contours and image seqs, will
     be stored in a .csv
-
-useful function call:
-combined_info = pd.merge(contour_info[contour_info["location"].notna()],
-                        image_info, on=["ID", "slice_type"], suffixes=("_contour", "_images"))
-DEFINITELY MERGE ON ["ID", "slice_type"] to get correct correspondence of images and contours
 
 CAVE: short axis stacks have a value for "basal_first", which needs to be passed
 to the reading function to get the correct order of images

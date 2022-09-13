@@ -9,7 +9,6 @@ for tests regarding actual integrity of a horos dataset, refer to test_horos_dat
 # pylint: disable=redefined-outer-name
 import argparse
 import os
-import re
 import sys
 
 import numpy as np
@@ -21,7 +20,6 @@ from matplotlib import pyplot as plt
 import horos_io._legacy
 import horos_io.core
 from horos_io import load_sax_sequence
-from horos_io import cmr
 from horos_io._utils import globSSF
 
 
@@ -132,8 +130,6 @@ def test_sort_sax_by_y(sax_path, horos_test_root, basal_first):
         assert (by_y.pixel_array == manual.pixel_array).all()
 
 
-
-
 def sax_method_iter():
     parser = argparse.ArgumentParser()
     parser.add_argument("--pth")
@@ -144,13 +140,14 @@ def sax_method_iter():
             full_seq_path = os.path.normpath(os.path.join(args.pth, row["seq_path"]))
             yield full_seq_path, row
     else:
-        yield None, None # dummy values
+        yield None, None  # dummy values
+
 
 @pytest.mark.skipif(not "--pth" in sys.argv, reason="this test is only to be run when specifying a path to a dataset")
 @pytest.mark.parametrize("full_seq_path, row", sax_method_iter())
 def test_sort_sax_by_y_hard(full_seq_path, row):
     """yaaay"""
-    sax_manual = horos_io.load_sax_sequence(full_seq_path, row["basal_first"])
+    sax_manual = horos_io.load_sax_sequence(full_seq_path)
     sax_by_y = horos_io.sort_SAX_by_y(load_sax_sequence(full_seq_path))
     for s_manual, s_by_y in zip(sax_manual.flatten(), sax_by_y.flatten()):
         assert (s_manual.pixel_array == s_by_y.pixel_array).all()

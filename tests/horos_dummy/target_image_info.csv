@@ -1,0 +1,9 @@
+,ID,slice_type,n_frames,n_slices,seq_path,location
+0,Impression_Cmr0064,cine_2ch,25,1,Impression_Cmr0064\Anonymous_Study - 0\CINE_segmented_LAX_2Ch_7,tests\horos_dummy\Impression_Cmr0064\Anonymous_Study - 0\CINE_segmented_LAX_2Ch_7
+1,Impression_Cmr0064,cine_3ch,25,1,Impression_Cmr0064\Anonymous_Study - 0\CINE_segmented_LAX_3Ch_5,tests\horos_dummy\Impression_Cmr0064\Anonymous_Study - 0\CINE_segmented_LAX_3Ch_5
+2,Impression_Cmr0064,cine_4ch,25,1,Impression_Cmr0064\Anonymous_Study - 0\CINE_segmented_LAX_4Ch_6,tests\horos_dummy\Impression_Cmr0064\Anonymous_Study - 0\CINE_segmented_LAX_4Ch_6
+3,Impression_Cmr0064,cine_sa,25,13,Impression_Cmr0064\Anonymous_Study - 0\CINE_segmented_SAX_28,tests\horos_dummy\Impression_Cmr0064\Anonymous_Study - 0\CINE_segmented_SAX_28
+4,Impression_Cmr0067,cine_2ch,25,1,Impression_Cmr0067\Anonymous_Study - 0\CINE_segmented_LAX_2Ch_7,tests\horos_dummy\Impression_Cmr0067\Anonymous_Study - 0\CINE_segmented_LAX_2Ch_7
+5,Impression_Cmr0067,cine_3ch,25,1,Impression_Cmr0067\Anonymous_Study - 0\CINE_segmented_LAX_3Ch_9,tests\horos_dummy\Impression_Cmr0067\Anonymous_Study - 0\CINE_segmented_LAX_3Ch_9
+6,Impression_Cmr0067,cine_4ch,25,1,Impression_Cmr0067\Anonymous_Study - 0\CINE_segmented_LAX_4Ch_10,tests\horos_dummy\Impression_Cmr0067\Anonymous_Study - 0\CINE_segmented_LAX_4Ch_10
+7,Impression_Cmr0067,cine_sa,25,13,Impression_Cmr0067\Anonymous_Study - 0\CINE_segmented_SAX_53,tests\horos_dummy\Impression_Cmr0067\Anonymous_Study - 0\CINE_segmented_SAX_53

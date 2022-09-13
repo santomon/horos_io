@@ -10,8 +10,8 @@ import pydicom
 from pydicom.errors import InvalidDicomError
 from scipy import interpolate
 
-
 Path = Union[str, os.PathLike]
+
 
 def __always_true(*args, **kwargs) -> bool: return True
 
@@ -20,17 +20,6 @@ def _to_str(i):
     if not 99 >= i >= 0 or not round(i) == i:
         raise ValueError(f"i should be 2 digits, but instead it is {i}")
     return str(i) if i >= 10 else f"0{i}"
-
-
-def combined_info(root):
-    """non fixture version for parametrization; assumes default naming convention; """
-    horos_contour_info_path = os.path.normpath(os.path.join(root, "contour_info.csv"))
-    horos_image_info_path = os.path.normpath(os.path.join(root, "image_info.csv"))
-    contour_info = pd.read_csv(horos_contour_info_path, index_col=0)
-    image_info = pd.read_csv(horos_image_info_path, index_col=0)
-    combined = pd.merge(contour_info[contour_info["location"].notna()],
-                        image_info, on=["ID", "slice_type"], suffixes=("_contour", "_images"))
-    return combined
 
 
 def get_log(log: str, root: str):
@@ -67,7 +56,6 @@ def get_seq_paths(root: Path) -> List[str]:
     return [pth for pth in globSSF("*/*/*/", root_dir=root) if _has_dicom(os.path.join(root, pth))]
 
 
-
 def get_ids(root: Path):
     """
     gets a list of IDs; not as trivial, as there can be other folders, too;
@@ -81,7 +69,6 @@ def get_ids(root: Path):
     seqs = get_seq_paths(root)
     result = [pathlib.Path(seq).parts[0] for seq in seqs]
     return sorted(list(set(result)))
-
 
 
 def get_log_path(log: str, root: str):
@@ -104,3 +91,4 @@ def mask_from_omega_contour(cines: np.ndarray, contours: Dict[str, np.ndarray], 
         smooth_contour = np.array([(round(px), round(py)) for px, py in zip(xnew, ynew)])
         mask = cv2.drawContours(mask, [smooth_contour], 0, i + 1, - 1)
     return mask
+

@@ -186,7 +186,7 @@ def get_contour_info(root: Path) -> pd.DataFrame:
     Returns:
     """
     result = pd.concat([get_contour_info_by_type(root, contour_type)
-                        for contour_type in tqdm(config.contour_types)], ignore_index=True)
+                        for contour_type in tqdm(_config.contour_types)], ignore_index=True)
     result["slice_type"] = result["contour_type"].apply(lambda x: _get_slice_type(x))
 
     if result.shape[0] == 0:

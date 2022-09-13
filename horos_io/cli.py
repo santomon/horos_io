@@ -51,7 +51,7 @@ def make_image_info_csv(root: Path,
     location is joint path of root and seq_path
 
     creates a csv file containing location of the sequence.
-    sequence can be loaded with load_sequence
+    sequence can be loaded with load_cine_sequence
     Args:
         silent: if silent, will not print out the result to console
         root: root of the data; contents should be directories of Impression Studies

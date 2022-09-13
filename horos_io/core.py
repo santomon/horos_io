@@ -123,8 +123,8 @@ def load_horos_contour(path_to_contour: Path, sequence: Union[np.ndarray, tuple,
     Args:
         path_to_contour: path should be a contour .xml file
         sequence: sequence can be:
-                            - a sequence loaded by load_sequence
-                            - a path to a sequence that could be loaded by load_sequence
+                            - a sequence loaded by load_cine_sequence
+                            - a path to a sequence that could be loaded by load_cine_sequence
                             - a tuple (n_frames, n_slices)
                   this is needed in order to infer, what the image_index from the .xml mean
     Returns: an ndarray of either shape (n_frames,) or (n_frames, n_slices)

@@ -55,7 +55,7 @@ def test_load_sax_sequence_pipeline(horos_test_seq_paths, horos_basal_first_file
                                 horos_io.core.get_n_slices_from_seq_path(sax_path))
 
 
-def test_load_sequence_pipeline(horos_image_info_path):
+def test_load_cine_sequence_pipeline(horos_image_info_path):
     image_info = pd.read_csv(horos_image_info_path, index_col=0)
 
     for i, row in image_info.iterrows():

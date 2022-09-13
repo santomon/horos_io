@@ -24,9 +24,6 @@ not that it really matters;
 for convenience, every location of contours and image seqs, will
     be stored in a .csv
 
-CAVE: short axis stacks have a value for "basal_first", which needs to be passed
-to the reading function to get the correct order of images
-
 CAVE: currently does not respect the fact, that we could have non-CINEs in our data
 """
 import os
@@ -146,7 +143,7 @@ def get_image_info(root: Path) -> pd.DataFrame:
      "n_frames",
      "n_slices",
 
-    sequence can be loaded with load_sequence
+    sequence can be loaded with load_cine_sequence
     Args:
         root: root of the data; contents should be directories of Studies
     Returns:
@@ -173,7 +170,7 @@ def get_image_info(root: Path) -> pd.DataFrame:
 def get_contour_info(root: Path) -> pd.DataFrame:
     """
     dataframe columns:
-    ("ID": <Impression_Cmr{ID}>,
+    ("ID": ,
      "contour_path": relative path to the contour file, starting from root of the data,
      "contour_type": one of config.contour_types,
      "location": joins the root dir with the sequence path

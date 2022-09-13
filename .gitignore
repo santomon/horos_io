@@ -104,3 +104,6 @@ ENV/
 # IDE settings
 .vscode/
 .idea/
+
+# our data
+tests/horos_dummy

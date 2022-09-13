@@ -20,21 +20,9 @@ from matplotlib import pyplot as plt
 
 import horos_io._legacy
 import horos_io.core
-from horos_io import cli, load_sax_sequence
+from horos_io import load_sax_sequence
 from horos_io import cmr
 from horos_io._utils import globSSF
-
-
-def test__make_contour_info_csv_pipeline(horos_test_root: str):
-    cli.make_contour_info_csv(horos_test_root,
-                                       out=os.path.join(horos_test_root, "test_contour_info.csv"))
-    assert True
-
-
-def test__make_image_info_csv_pipeline(horos_test_root: str):
-    cli.make_image_info_csv(horos_test_root,
-                                     out=os.path.join(horos_test_root, "test_image_info.csv"))
-    assert True
 
 
 def test_get_n_frames_from_seq_path(horos_test_root):
@@ -63,9 +51,8 @@ def test_load_sax_sequence_pipeline(horos_test_seq_paths, horos_basal_first_file
     sax_paths = [seq_path for seq_path in horos_test_seq_paths if "sax" in seq_path.lower()]
     assert len(sax_paths) > 0
 
-    basal_firsts = horos_io._legacy._load_basaL_first_as_list(horos_basal_first_file)
     for sax_path in sax_paths:
-        sample = horos_io._legacy.load_sax_sequence(sax_path, re.findall(r"\d{4}", sax_path)[0] in basal_firsts)
+        sample = horos_io.load_sax_sequence(sax_path)
         assert sample.shape == (horos_io.core.get_n_frames_from_seq_path(sax_path),
                                 horos_io.core.get_n_slices_from_seq_path(sax_path))
 
@@ -74,7 +61,7 @@ def test_load_sequence_pipeline(horos_image_info_path):
     image_info = pd.read_csv(horos_image_info_path, index_col=0)
 
     for i, row in image_info.iterrows():
-        sample = horos_io._legacy.load_sequence(row["location"], row["basal_first"])
+        sample = horos_io.load_cine_sequence(row["location"])
         for entry in sample.flatten():
             assert isinstance(entry, pydicom.FileDataset)
 
@@ -109,7 +96,7 @@ def test_visually_confirm_ordering(horos_image_info_path, horos_contour_info_pat
                         image_info, on=["ID", "slice_type"], suffixes=("_contour", "_images"))
 
     for i, row in combined.iterrows():
-        cines = horos_io._legacy.load_sequence(row["location_images"], row["basal_first"])
+        cines = horos_io.load_cine_sequence(row["location_images"])
         contours = horos_io.core.load_horos_contour(row["location_contour"], row["location_images"])
 
         mid_minus3 = cines.shape[1] // 2 - 3
@@ -139,8 +126,8 @@ def test_sort_sax_by_y(sax_path, horos_test_root, basal_first):
     test to see if we can load SAX Stack in right order without relying on manual confirmation
     """
     pth = os.path.normpath(os.path.join(horos_test_root, sax_path))
-    sax_manual = load_sax_sequence(pth, basal_first=basal_first)
-    sax_by_y = horos_io.sort_SAX_by_y(load_sax_sequence(pth, basal_first=False))
+    sax_manual = horos_io._legacy.load_sax_sequence(pth, basal_first)
+    sax_by_y = horos_io.sort_SAX_by_y(load_sax_sequence(pth))
     for by_y, manual in zip(sax_by_y.flatten(), sax_manual.flatten()):
         assert (by_y.pixel_array == manual.pixel_array).all()
 
@@ -163,7 +150,7 @@ def sax_method_iter():
 @pytest.mark.parametrize("full_seq_path, row", sax_method_iter())
 def test_sort_sax_by_y_hard(full_seq_path, row):
     """yaaay"""
-    sax_manual = horos_io._legacy.load_sax_sequence(full_seq_path, row["basal_first"])
-    sax_by_y = horos_io.sort_SAX_by_y(load_sax_sequence(full_seq_path, False))
+    sax_manual = horos_io.load_sax_sequence(full_seq_path, row["basal_first"])
+    sax_by_y = horos_io.sort_SAX_by_y(load_sax_sequence(full_seq_path))
     for s_manual, s_by_y in zip(sax_manual.flatten(), sax_by_y.flatten()):
         assert (s_manual.pixel_array == s_by_y.pixel_array).all()

@@ -1,16 +1,15 @@
 import os
 from datetime import datetime
 from functools import reduce
-from typing import Iterable
+from typing import Optional, Union, Dict
 
 import numpy as np
 import pandas as pd
 
 import horos_io._legacy
 import horos_io.core
-from horos_io import cmr
-from horos_io.config import time_format
 from horos_io.cmr import Path
+from horos_io.config import time_format
 
 
 def last_validation_was_successful(log: pd.DataFrame, conf_field="result", **criteria):
@@ -23,7 +22,8 @@ def last_validation_was_successful(log: pd.DataFrame, conf_field="result", **cri
     Returns:
         bool: True, if the last entry of this combination in log_ was successful
     """
-    eligible = reduce(lambda x, y: x & y, [log[k].apply(v) if callable(v) else log[k] == v for k, v in criteria.items()])
+    eligible = reduce(lambda x, y: x & y,
+                      [log[k].apply(v) if callable(v) else log[k] == v for k, v in criteria.items()])
     in_question = log[eligible]
     if in_question.shape[0] == 0:
         return False
@@ -74,3 +74,15 @@ def write_log(log_: Path, **kwargs):
     }), ignore_index=True)
     df.to_csv(log_)
 
+
+def all_more_than_3_points(contour: np.ndarray) -> bool:
+    """any contour should have more than 3 points for meaningful spline interpolation; (even though we only need 3 theoretically)"""
+    return all([len(C) > 3 for C in contour.flatten()[np.where(contour.flatten() != 0)]])
+
+
+def contour_is_valid(contour: Union[Dict[str, np.ndarray], np.ndarray], n: Optional[int] = None) -> bool:
+    if isinstance(contour, dict):
+        return reduce(lambda x, y: x and y, [contour_is_valid(value) for value in contour.values()])
+    else:
+        at_least_n = (contour != 0).sum() >= n if n is not None else True
+        return at_least_n and all_more_than_3_points(contour)

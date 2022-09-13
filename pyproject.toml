@@ -12,11 +12,10 @@ classifiers=[
     'Intended Audience :: Developers',
     'License :: OSI Approved :: MIT License',
     'Natural Language :: English',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
-    'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
 ]
 packages = [
     { include = "horos_io" },
@@ -52,6 +51,7 @@ horos_io = 'horos_io.cli:main'
 [tool.poetry.group.dev.dependencies]
 urllib3 = "^1.26.12"
 requests = "^2.28.1"
+twine = "^4.0.1"
 
 [build-system]
 requires = ["poetry>=0.12"]

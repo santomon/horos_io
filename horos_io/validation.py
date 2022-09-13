@@ -44,7 +44,7 @@ def visually_confirm_omega_iter(combined_info: pd.DataFrame):
     """
     combined_info = combined_info[combined_info["contour_type"].apply(lambda cont: "omega" in cont)]
     for i, row in combined_info.iterrows():
-        cines = horos_io._legacy.load_sequence(row["location_images"], row["basal_first"])
+        cines = horos_io.load_cine_sequence(row["location_images"])
         contours = horos_io.core.load_horos_contour(row["location_contour"], row["location_images"])
         if len(cines.shape) == 1:
             cines = cines[:, np.newaxis]

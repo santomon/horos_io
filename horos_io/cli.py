@@ -14,12 +14,11 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
-from horos_io import config
-from horos_io._utils import globSSF, mask_from_omega_contour, combined_info, get_log, get_log_path
-from horos_io.cmr import Path, get_image_info, get_contour_info
-from horos_io.core import get_contour_info_by_type
+from horos_io import load_horos_contour
+from horos_io._utils import globSSF, mask_from_omega_contour, get_log, get_log_path
+from horos_io.cmr import Path, get_image_info, get_contour_info, get_combined_info
 from horos_io.ui import shitty_manual_confirm
-from horos_io.validation import visually_confirm_omega_iter, write_log, last_validation_was_successful
+from horos_io.validation import visually_confirm_omega_iter, write_log, last_validation_was_successful, contour_is_valid
 
 
 @click.group()
@@ -127,7 +126,7 @@ def validate(by: str, root: Path, only_unconfirmed: bool, log: Path):
     """
     click.echo(f"starting validation process in root: {root}")
 
-    for ID, omega, f, s, cines, contours in tqdm(visually_confirm_omega_iter(combined_info=combined_info(root))):
+    for ID, omega, f, s, cines, contours in tqdm(visually_confirm_omega_iter(combined_info=get_combined_info(root))):
         if only_unconfirmed and last_validation_was_successful(get_log(log, root), ID=ID, frame=f, slice=s,
                                                                contour_type=omega):  # CAVE: hard coded
             continue
@@ -140,32 +139,31 @@ def validate(by: str, root: Path, only_unconfirmed: bool, log: Path):
     click.echo("batch finished validation!")
 
 
-# not sure if we should cli this
-def _rename_contour_files(root: str, rename_dict: typing.Optional[dict]) -> typing.NoReturn:
+@click.command("rename", help="renames all contours with .xml and .rois_series attached to it")
+@click.argument("old", nargs=1)
+@click.argument("target", nargs=1)
+@click.option("--root", help="Data root")
+def rename_contour_files(root: str, old: str, target: str) -> typing.NoReturn:
     """
-    onetime io operation to fix namings of xml files
-
     renames .xml and .roi_series files by dictionary, that lie in the impression folders:
     root |--- Impression_CmrXXXX
                     |---- lv_epi.xml
                     |---- lv_epi.roi_series
     Args:
         root:
-        rename_dict:
-
     Returns:
     """
-    files = globSSF("Impression*/*.xml", root_dir=root) + globSSF("Impression*/*.rois_series", root_dir=root)
+    files = globSSF(f"*/{old}.xml", root_dir=root) + globSSF(f"*/{old}.rois_series", root_dir=root)
     for f in files:
         path, f_name = os.path.split(f)
         f_name, f_ending = f_name.split(".")
-        if f_name in rename_dict.keys():
-            src = os.path.normpath(os.path.join(root, path, f"{f_name}.{f_ending}"))
-
-            dst = os.path.normpath(os.path.join(root, path, f"{rename_dict[f_name]}.{f_ending}"))
-            if os.path.isfile(dst):
-                raise FileExistsError(f"{dst} for {src} already exists")
-            os.rename(src, dst)
+        src = os.path.normpath(os.path.join(root, path, f"{old}.{f_ending}"))
+        dst = os.path.normpath(os.path.join(root, path, f"{target}.{f_ending}"))
+        if os.path.isfile(dst):
+            raise FileExistsError(f"{dst} for {src} already exists")
+        os.rename(src, dst)
+        click.echo(f"renamed {src} to {dst}")
+    click.echo("finished")
 
 
 @click.group("check", help="given a root and a log file, checks if the user (--by) has seen all the samples")
@@ -177,7 +175,7 @@ def check():
 @click.option("--root", default=".", help="source root to the Horos dataset")
 @click.option("--log", default=None,
               help="if None, will check for val_contour_log.csv in root, else checks your specified log instead")
-@click.command("failed")
+@click.command("failed", help="check to log for which contours did not and in validation by the user")
 def check_failed(by: str, root: str, log: str):
     click.echo(
         f"checking for failed validations by {by} for dataset in {root}, using logfile {get_log_path(log, root)}")
@@ -195,8 +193,9 @@ def check_failed(by: str, root: str, log: str):
         click.echo(f"These samples did not end with confirmation by user {by}")
 
 
-@click.command("unobserved", help="looks at the data and the logs to determine, which contours by which ID still needs to,"
-                                  "be evalutated by a given user;")
+@click.command("unobserved",
+               help="looks at the data and the logs to determine, which contours by which ID still needs to,"
+                    "be evalutated by a given user;")
 @click.option("--root", default=".", help="source root to the Horos dataset")
 @click.option("--log", default=None,
               help="if None, will check for val_contour_log.csv in root, else checks your specified log instead")
@@ -205,27 +204,46 @@ def check_unobserved(by: str, root: str, log: str):
     click.echo(
         f"checking, which contours have not been seen by user {by} yet in datasat at {root}, using log {get_log_path(log, root)}")
     log_df = get_log(log, root)
-    combined_info_ = combined_info(root)
-    combined_info_["ID", "contour_type"]
+    combined_info_ = get_combined_info(root)
+    # combined_info_["ID", "contour_type"]
+    click.echo("Under construction")
+    return
 
-    # TODO: open the contour to look for which frame / slice needs to be seen
-    # TODO: filter by omega
+    # for g_n, group in combined_info_.groupby(["ID", "slice_type", "contour_type", "location_contour", "location_images"]):
+    #     click.echo(group)
+    #
+    # # TODO: open the contour to look for which frame / slice needs to be seen
+    # # TODO: filter by omega
 
-@click.command("existing", help = "look at exsiting contours in root, given a number of contour types; will check"
-                                  "for existing <contour_type>.xml files that are in child directories of root")
+
+@click.command("existing", help="look at exsiting contours in root, given a number of contour types; will check"
+                                "for existing <contour_type>.xml files that are in child directories of root")
 @click.argument("contour_types", nargs=-1)
+@click.option("--n", default=None, type=int,
+              help="If passed, will check if a contour file has at least that many contours")
 @click.option("--root", default=".", help="source root to the Horos dataset")
-def check_existing_contours(contour_types, root):
-
+def check_existing_contours(contour_types: typing.List[str], root: str, n: Optional[int]):
+    """currently terrible and unhelpful vaidation process... honestly using pytest was pretty king"""
     click.echo(f"checking contour types {contour_types} in root: {root}...")
+    combined_info = get_combined_info(root)
+
+    click.echo("the following contours need to be rechecked: ")
+    # TODO: improve logging...
+    # really, pytest for this kinda stuff wasnt half bad
     for contour_type in contour_types:
-        pass
+        eligible = combined_info[
+            (combined_info["contour_type"] == contour_type) & (combined_info["location_contour"].notna())]
+        eligible.loc[:, "valid"] = eligible.apply(
+            lambda row: contour_is_valid(load_horos_contour(row["location_contour"], row["location_images"]), n),
+            axis=1)
+        click.echo(eligible[eligible["valid"] != True][["ID", "contour_path", "contour_type"]])
 
-
+    click.echo("finished checking")
 
 
 main.add_command(make_image_info_csv)
 main.add_command(make_contour_info_csv)
+main.add_command(rename_contour_files)
 main.add_command(validate)
 main.add_command(check)
 check.add_command(check_failed)

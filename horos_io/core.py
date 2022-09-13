@@ -73,7 +73,7 @@ def _load_omega_contour(contour_path: Path, n_frames: int, n_slices: int) -> Dic
     omega = os.path.split(contour_path)[1].split(".")[0]
     return {contour_name: _load_horos_contour(contour_path, n_frames, n_slices,
                                               filter_=partial(_filter_by_contour_name, contour_name))
-            for contour_name in getattr(config, f"{omega}_names")}
+            for contour_name in getattr(_config, f"{omega}_names")}
 
 
 def get_n_frames_from_seq_path(path_to_sequence: Path) -> int:

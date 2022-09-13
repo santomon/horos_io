@@ -9,7 +9,7 @@ import pandas as pd
 import horos_io._legacy
 import horos_io.core
 from horos_io.cmr import Path
-from horos_io.config import time_format
+from horos_io._config import time_format
 
 
 def last_validation_was_successful(log: pd.DataFrame, conf_field="result", **criteria):

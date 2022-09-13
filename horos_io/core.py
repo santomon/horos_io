@@ -7,7 +7,7 @@ from xml.etree import ElementTree as ET
 import numpy as np
 import pandas as pd
 
-from horos_io import config
+from horos_io import _config
 from horos_io._utils import __always_true, globSSF, get_ids
 
 Path = Union[str, os.PathLike]

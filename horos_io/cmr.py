@@ -38,7 +38,7 @@ import pandas as pd
 import pydicom
 from tqdm import tqdm
 
-from horos_io import config
+from horos_io import _config
 from horos_io.core import get_n_frames_from_seq_path, \
     get_n_slices_from_seq_path, _get_name_from_template, get_contour_info_by_type
 from ._utils import _to_str, get_seq_paths

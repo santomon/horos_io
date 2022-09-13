@@ -36,12 +36,12 @@ def horos_basal_first_file(horos_test_root):
 
 @pytest.fixture()
 def horos_contour_info_path(horos_test_root):
-    return os.path.join(horos_test_root, "test_contour_info.csv")
+    return os.path.join(horos_test_root, "target_contour_info.csv")
 
 
 @pytest.fixture()
 def horos_image_info_path(horos_test_root):
-    return os.path.join(horos_test_root, "test_image_info.csv")
+    return os.path.join(horos_test_root, "target_image_info.csv")
 
 
 @pytest.fixture()

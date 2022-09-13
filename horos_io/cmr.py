@@ -192,5 +192,19 @@ def get_contour_info(root: Path) -> pd.DataFrame:
     return result.sort_values(by=["ID", "slice_type", "contour_type"])
 
 
+def get_combined_info(root: Path) -> pd.DataFrame:
+    """
+    Args:
+        root: Horos Dataset root
+    Returns:
+        DataFrame, which contains the combined info you get from get_contour_info and get_image_info
+        by merging with ID and slice_type
+    """
+    image_info = get_image_info(root)
+    contour_info = get_contour_info(root)
+    return pd.merge(contour_info[contour_info["location"].notna()],
+                    image_info, on=["ID", "slice_type"], suffixes=("_contour", "_images"))
+
+
 if __name__ == '__main__':
     pass

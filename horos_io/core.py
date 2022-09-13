@@ -1,7 +1,7 @@
 import os
 import re
 from functools import partial
-from typing import Callable, Union, Dict
+from typing import Callable, Union, Dict, Tuple, List
 from xml.etree import ElementTree as ET
 
 import numpy as np
@@ -149,6 +149,32 @@ def load_horos_contour(path_to_contour: Path, sequence: Union[np.ndarray, tuple,
         return _load_omega_contour(path_to_contour, n_frames, n_slices)
 
 
+def load_horos_contour_unstructured(contour_path: Path) -> List[Tuple[int, str, List[Tuple[float, float]]]]:
+    """
+    sometimes it might be easier to not rely on prior structural information to construct an ndarray
+    this function simply loads all existing contours in a given .xml file
+
+    to be seen, if there should be more returned
+    Args:
+        contour_path: path to the contour .xml file
+    Returns:
+        a list of all existing contours in a triple (ImageIndex, ROIName, Contour)
+    """
+    tree = ET.parse(contour_path)
+    root = tree.getroot()
+
+    result = []
+    for elem in root[0][1]:
+        # image level
+        image_index = int(elem[1].text)
+        for roi in elem[5]:
+            contour_name = roi[17].text
+            contour = [eval(point.text) for point in roi[23]]
+            result.append((image_index, contour_name, contour))
+    return result
+
+
+
 def get_contour_info_by_type(root: Path, contour_type: str) -> pd.DataFrame:
     """
     given a Horos root and a contour type; returns a dataframe with information
@@ -183,3 +209,19 @@ def get_contour_info_by_type(root: Path, contour_type: str) -> pd.DataFrame:
     result["location"].replace("", pd.NA, inplace=True)
     result = result[["ID", "contour_type", "contour_path", "location"]]
     return result
+
+
+def existing_contours_within(group: pd.DataFrame) -> pd.DataFrame:
+    """
+    TODO: finish this
+    takes a group from get_combined_info, that has been properly grouped, such that there is only one row left;
+    loads contours and creates a new df, with additional entry for frame and slice, where contours exist;
+
+    if a contour object with multiple contours, will raise an error if there is any discrepancy
+    Args:
+        group:
+
+    Returns:
+    """
+    pass
+

@@ -21,6 +21,7 @@ import horos_io._legacy
 import horos_io.core
 from horos_io import load_sax_sequence
 from horos_io._utils import globSSF
+from tests import conftest
 
 
 def test_get_n_frames_from_seq_path(horos_test_root):
@@ -30,29 +31,30 @@ def test_get_n_frames_from_seq_path(horos_test_root):
         assert n_frames == 25, f"n_frames should be 25, but is {n_frames}; failed at {seq_root}"
 
 
-def test_get_n_slices_from_seq_path(horos_test_seq_paths, horos_test_seq_n_slices):
-    for seq_path, n_slices in zip(horos_test_seq_paths, horos_test_seq_n_slices):
-        assert horos_io.core.get_n_slices_from_seq_path(seq_path) == n_slices
+@pytest.mark.parametrize("horos_test_seq_path2, horos_test_seq_n_slices2", zip(conftest.SEQ, conftest.N_SLICES))
+def test_get_n_slices_from_seq_path(horos_test_seq_path2, horos_test_seq_n_slices2, horos_test_root):
+    pth = os.path.normpath(os.path.join(horos_test_root, horos_test_seq_path2))
+    assert horos_io.core.get_n_slices_from_seq_path(pth) == horos_test_seq_n_slices2
 
 
-def test_load_lax_sequence_pipeline(horos_test_seq_paths):
-    lax_paths = [seq_path for seq_path in horos_test_seq_paths
-                 if ("2ch" in seq_path.lower() or "3ch" in seq_path.lower() or "4ch" in seq_path.lower())]
-    assert len(lax_paths) > 0
+def test_load_lax_sequence_pipeline(horos_test_seq_path):
+    if not (
+        "2ch" in horos_test_seq_path.lower() or "3ch" in horos_test_seq_path.lower() or "4ch" in horos_test_seq_path.lower()):
+        assert True
+        return
 
-    for lax_path in lax_paths:
-        sample = horos_io.load_lax_sequence(lax_path)
-        assert sample.shape == (25,)
+    sample = horos_io.load_lax_sequence(horos_test_seq_path)
+    assert sample.shape == (25,)
 
 
-def test_load_sax_sequence_pipeline(horos_test_seq_paths, horos_basal_first_file):
-    sax_paths = [seq_path for seq_path in horos_test_seq_paths if "sax" in seq_path.lower()]
-    assert len(sax_paths) > 0
-
-    for sax_path in sax_paths:
-        sample = horos_io.load_sax_sequence(sax_path)
-        assert sample.shape == (horos_io.core.get_n_frames_from_seq_path(sax_path),
-                                horos_io.core.get_n_slices_from_seq_path(sax_path))
+def test_load_sax_sequence_pipeline(horos_test_seq_path):
+    if not "sax" in horos_test_seq_path:
+        assert True
+        return
+    else:
+        sample = horos_io.load_sax_sequence(horos_test_seq_path)
+        assert sample.shape == (horos_io.core.get_n_frames_from_seq_path(horos_test_seq_path),
+                                horos_io.core.get_n_slices_from_seq_path(horos_test_seq_path))
 
 
 def test_load_cine_sequence_pipeline(horos_image_info_path):

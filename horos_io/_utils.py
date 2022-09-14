@@ -1,12 +1,13 @@
 import glob
 import os.path
 import pathlib
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Optional, Tuple
 
 import cv2
 import numpy as np
 import pandas as pd
 import pydicom
+from decorator import decorator
 from pydicom.errors import InvalidDicomError
 from scipy import interpolate
 
@@ -14,6 +15,24 @@ Path = Union[str, os.PathLike]
 
 
 def __always_true(*args, **kwargs) -> bool: return True
+
+
+@decorator
+def handle_1D(f, *args, **kwargs):
+    def _handle_1D(item):
+        if isinstance(item, np.ndarray):
+            if len(item.shape) < 2:
+                return item[:, np.newaxis]
+            else:
+                return item
+        elif isinstance(item, dict):
+            return {k: _handle_1D(v) for k, v in item.items()}
+        elif isinstance(item, tuple):
+            return tuple([_handle_1D(v) for v in item])
+        else:
+            return item
+
+    return f(*_handle_1D(args), **_handle_1D(kwargs))
 
 
 def _to_str(i):
@@ -83,7 +102,10 @@ def globSSF(path_name, /, root_dir, **kwargs) -> List[str]:
             glob.glob(os.path.normpath(os.path.join(root_dir, path_name)), **kwargs)]
 
 
-def mask_from_omega_contour(cines: np.ndarray, contours: Dict[str, np.ndarray], f: int, s: int) -> np.ndarray:
+@handle_1D
+def mask_from_omega_contour(cines: np.ndarray, contours: Dict[str, np.ndarray], f: int,
+                            s: Optional[int] = None) -> np.ndarray:
+    # TODO: raises error when passing 1D sequences
     mask = np.zeros_like(cines[f, s].pixel_array)
     for i, (name, c) in enumerate(contours.items()):
         tck, _ = interpolate.splprep([*zip(*c[f, s])], s=0, per=True)
@@ -91,4 +113,5 @@ def mask_from_omega_contour(cines: np.ndarray, contours: Dict[str, np.ndarray], 
         smooth_contour = np.array([(round(px), round(py)) for px, py in zip(xnew, ynew)])
         mask = cv2.drawContours(mask, [smooth_contour], 0, i + 1, - 1)
     return mask
+
 

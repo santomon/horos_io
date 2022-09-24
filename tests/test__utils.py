@@ -48,7 +48,7 @@ def test_mask_from_omega_contour(horos_test_seq_path):
 
     omega = {cname: random_contours() for cname in _config.omega_4ch_names}
 
-    mask = _utils.mask_from_omega_contour(cine, omega, 0, 0)
+    mask = _utils.mask_from_omega_contour(cine, omega, (0, 0))
 
     assert mask.shape == cine.flatten()[0].pixel_array.shape
 

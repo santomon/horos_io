@@ -103,12 +103,13 @@ def globSSF(path_name, /, root_dir, **kwargs) -> List[str]:
 
 
 @handle_1D
-def mask_from_omega_contour(cines: np.ndarray, contours: Dict[str, np.ndarray], f: int,
-                            s: Optional[int] = None) -> np.ndarray:
+####
+def mask_from_omega_contour(cines: np.ndarray, contours: Dict[str, np.ndarray], loc: Union[int, Tuple]) -> np.ndarray:
     # TODO: raises error when passing 1D sequences
-    mask = np.zeros_like(cines[f, s].pixel_array)
+    # simply havin the user pass the location as tuple or int should be much more flexible
+    mask = np.zeros_like(cines[loc].pixel_array)
     for i, (name, c) in enumerate(contours.items()):
-        tck, _ = interpolate.splprep([*zip(*c[f, s])], s=0, per=True)
+        tck, _ = interpolate.splprep([*zip(*c[loc])], s=0, per=True)
         xnew, ynew = interpolate.splev(np.linspace(0, 1, 500), tck, der=0)
         smooth_contour = np.array([(round(px), round(py)) for px, py in zip(xnew, ynew)])
         mask = cv2.drawContours(mask, [smooth_contour], 0, i + 1, - 1)

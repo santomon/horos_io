@@ -63,7 +63,7 @@ def visually_confirm_omega_iter(combined_info: pd.DataFrame):
         combined_info:
     Returns:
     """
-    combined_info = combined_info[combined_info["contour_type"].apply(lambda cont: "omega_3ch" == cont)]
+    combined_info = combined_info[combined_info["contour_type"].apply(lambda cont: "omega" in cont)]
     for i, row in combined_info.iterrows():
         cines = horos_io.load_cine_sequence(row["location_images"])
         contours = horos_io.core.load_horos_contour(row["location_contour"], row["location_images"])

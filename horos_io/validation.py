@@ -112,6 +112,7 @@ def all_more_than_3_points(contour: np.ndarray) -> bool:
 
 
 def contour_is_valid(contour: Union[Dict[str, np.ndarray], np.ndarray], n: Optional[int] = None) -> bool:
+    """this method kinda sucks bc it doesnt tell us which and where"""
     if isinstance(contour, dict):
         return reduce(lambda x, y: x and y, [contour_is_valid(value, n) for value in contour.values()])
     else:

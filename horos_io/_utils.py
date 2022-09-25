@@ -102,7 +102,6 @@ def globSSF(path_name, /, root_dir, **kwargs) -> List[str]:
             glob.glob(os.path.normpath(os.path.join(root_dir, path_name)), **kwargs)]
 
 
-@handle_1D
 ####
 def mask_from_omega_contour(cines: np.ndarray, contours: Dict[str, np.ndarray], loc: Union[int, Tuple]) -> np.ndarray:
     # TODO: raises error when passing 1D sequences

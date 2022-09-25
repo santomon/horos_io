@@ -37,7 +37,6 @@ def last_validation_was_successful(log: pd.DataFrame, conf_field="result", **cri
 def last_validation(log: pd.DataFrame, **criteria) -> pd.Series:
     """
     Args:
-        conf_field: name of the field in log_, from which to draw the confirmation
         **criteria: k: column name in log_; v: specific entry to filter by; either a specific value or a callable that is the applied to the respective series
         log:
 
@@ -68,7 +67,7 @@ def visually_confirm_omega_iter(combined_info: pd.DataFrame):
     for i, row in combined_info.iterrows():
         cines = horos_io.load_cine_sequence(row["location_images"])
         contours = horos_io.core.load_horos_contour(row["location_contour"], row["location_images"])
-        mt_contour = time.gmtime(os.stat(row["location_contour"]).st_mtime)
+        mt_contour = time.localtime(os.stat(row["location_contour"]).st_mtime)
 
         if len(cines.shape) == 1:
             cines = cines[:, np.newaxis]
@@ -78,6 +77,7 @@ def visually_confirm_omega_iter(combined_info: pd.DataFrame):
 
 
 def changed_since_last_validation(mt_contour, log_row: pd.Series) -> bool:
+    """TODO: check, if this method even works correctly"""
     if log_row is None:
         return True
     last_val = time.strptime(log_row["time_stamp"], time_format)

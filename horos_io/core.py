@@ -71,9 +71,10 @@ def _load_omega_contour(contour_path: Path, n_frames: int, n_slices: int) -> Dic
     """
     # any contour should be named <Path>/omega_{slice_type}.xml
     omega = os.path.split(contour_path)[1].split(".")[0]
-    return {contour_name: _load_horos_contour(contour_path, n_frames, n_slices,
-                                              filter_=partial(_filter_by_contour_name, contour_name))
-            for contour_name in getattr(_config, f"{omega}_names")}
+    result = {contour_name: _load_horos_contour(contour_path, n_frames, n_slices,
+                                                filter_=partial(_filter_by_contour_name, contour_name))
+              for contour_name in getattr(_config, f"{omega}_names")}
+    return result
 
 
 def get_n_frames_from_seq_path(path_to_sequence: Path) -> int:
@@ -174,7 +175,6 @@ def load_horos_contour_unstructured(contour_path: Path) -> List[Tuple[int, str, 
     return result
 
 
-
 def get_contour_info_by_type(root: Path, contour_type: str) -> pd.DataFrame:
     """
     given a Horos root and a contour type; returns a dataframe with information
@@ -224,4 +224,3 @@ def existing_contours_within(group: pd.DataFrame) -> pd.DataFrame:
     Returns:
     """
     pass
-

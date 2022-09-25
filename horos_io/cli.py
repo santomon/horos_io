@@ -117,7 +117,9 @@ def make_contour_info_csv(root: Path, out: Optional[Path], silent: bool) -> NoRe
               help="will only prompt you cases, that have not been confirmed by the user yet (registered in log_)")
 @click.option("--log", default=None,
               help="if None, will save or update a val_contour_log.csv in root, else checks your specified log_ instead")
-def validate(by: str, root: Path, only_unconfirmed: bool, log: Path):
+@click.option("--dry_run", is_flag=True, default=False,
+              help="if this flag is set, run through the procedure without displaying or logging anything")
+def validate(by: str, root: Path, only_unconfirmed: bool, log: Path, dry_run: bool):
     """
     visually confirm literally every existing omega contour... (might need to change with params to return
     an adequate iterator)
@@ -132,8 +134,8 @@ def validate(by: str, root: Path, only_unconfirmed: bool, log: Path):
         if only_unconfirmed and last_validation_was_successful(get_log(log, root), ID=ID, frame=f, slice=s,
                                                                contour_type=omega) and not changed_since_last_validation(
             mt_contour, last_validation(get_log(log, root), ID=ID, frame=f, slice=s,
-                                                      contour_type=omega)):  # CAVE: hard coded
-            continue
+                                        contour_type=omega)):  # CAVE: hard coded
+            click.echo(f"skipping {ID}, ({f}, {s}), {omega}")
         loc = (f, s)
         fig, ax = plt.subplots()
         ax.imshow(cines[loc].pixel_array)
@@ -144,9 +146,11 @@ def validate(by: str, root: Path, only_unconfirmed: bool, log: Path):
         if omega == "omega_3ch":
             ax.axes.scatter(*zip(*contours["aroot"][loc]),
                             c=["black", "red", "green", "blue", "cyan", "purple"])
-
-        ok, remark = shitty_manual_confirm(ax)
-        write_log(log, **locals())
+        if not dry_run:
+            ok, remark = shitty_manual_confirm(ax)
+            write_log(log, **locals())
+        else:
+            plt.close()
 
     click.echo("batch finished validation!")
 
@@ -236,7 +240,7 @@ def check_unobserved(by: str, root: str, log: str):
 @click.option("--n", default=None, type=int,
               help="If passed, will check if a contour file has at least that many contours")
 @click.option("--root", default=".", help="source root to the Horos dataset")
-def check_existing_contours(contour_types: typing.List[str], root: str, n: Optional[int]):
+def check_existing_contours(contour_types: typing.List[str], root: str, n: Optional[int], ):
     """currently terrible and unhelpful vaidation process... honestly using pytest was pretty king"""
     click.echo(f"checking contour types {contour_types} in root: {root}...")
     combined_info = get_combined_info(root)

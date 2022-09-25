@@ -18,7 +18,8 @@ from horos_io import load_horos_contour
 from horos_io._utils import globSSF, mask_from_omega_contour, get_log, get_log_path
 from horos_io.cmr import Path, get_image_info, get_contour_info, get_combined_info
 from horos_io.ui import shitty_manual_confirm
-from horos_io.validation import visually_confirm_omega_iter, write_log, last_validation_was_successful, contour_is_valid
+from horos_io.validation import visually_confirm_omega_iter, write_log, last_validation_was_successful, \
+    contour_is_valid, changed_since_last_validation, last_validation
 
 
 @click.group()
@@ -126,16 +127,27 @@ def validate(by: str, root: Path, only_unconfirmed: bool, log: Path):
     """
     click.echo(f"starting validation process in root: {root}")
 
-    for ID, omega, f, s, cines, contours in tqdm(visually_confirm_omega_iter(combined_info=get_combined_info(root))):
+    for ID, omega, f, s, cines, contours, mt_contour in tqdm(
+        visually_confirm_omega_iter(combined_info=get_combined_info(root))):
         if only_unconfirmed and last_validation_was_successful(get_log(log, root), ID=ID, frame=f, slice=s,
-                                                               contour_type=omega):  # CAVE: hard coded
+                                                               contour_type=omega) and not changed_since_last_validation(
+            mt_contour, last_validation(get_log(log, root), ID=ID, frame=f, slice=s,
+                                                      contour_type=omega)):  # CAVE: hard coded
             continue
+        loc = (f, s)
         fig, ax = plt.subplots()
-        ax.imshow(cines[f, s].pixel_array)
-        ax.imshow(mask_from_omega_contour(cines, contours, f, s), cmap="jet", alpha=0.5)
+        ax.imshow(cines[loc].pixel_array)
+        ax.imshow(mask_from_omega_contour(cines, contours, loc), cmap="jet", alpha=0.5)
         ax.figure.suptitle(f"{ID}: {omega} f: {f}, s: {s}, ")
+
+        ##################### ideall y this is not part of the cli logic #######################################
+        if omega == "omega_3ch":
+            ax.axes.scatter(*zip(*contours["aroot"][loc]),
+                            c=["black", "red", "green", "blue", "cyan", "purple"])
+
         ok, remark = shitty_manual_confirm(ax)
         write_log(log, **locals())
+
     click.echo("batch finished validation!")
 
 
@@ -150,6 +162,8 @@ def rename_contour_files(root: str, old: str, target: str) -> typing.NoReturn:
                     |---- lv_epi.xml
                     |---- lv_epi.roi_series
     Args:
+        target:
+        old:
         root:
     Returns:
     """

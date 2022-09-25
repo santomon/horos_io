@@ -114,7 +114,7 @@ def mask_from_omega_contour(cines: np.ndarray, contours: Dict[str, np.ndarray], 
             smooth_contour = np.array([(round(px), round(py)) for px, py in zip(xnew, ynew)])
             mask = cv2.drawContours(mask, [smooth_contour], 0, i + 1, - 1)
         else:
-            mask = cv2.drawContours(mask, [c], 0, i + 1, -1)
+            mask = cv2.drawContours(mask, [np.array(c[loc],dtype=int)], 0, i + 1, -1)
     return mask
 
 

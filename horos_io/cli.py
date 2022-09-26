@@ -11,7 +11,6 @@ from typing import Optional, NoReturn
 
 import click
 import pandas as pd
-from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 from horos_io import load_horos_contour
@@ -20,7 +19,11 @@ from horos_io.cmr import Path, get_image_info, get_contour_info, get_combined_in
 from horos_io.ui import shitty_manual_confirm
 from horos_io.validation import visually_confirm_omega_iter, write_log, last_validation_was_successful, \
     contour_is_valid, changed_since_last_validation, last_validation
+import matplotlib
+if sys.platform == "darwin":
+    matplotlib.use("macosx")
 
+from matplotlib import pyplot as plt
 
 @click.group()
 def main():

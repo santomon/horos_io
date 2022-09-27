@@ -139,6 +139,7 @@ def validate(by: str, root: Path, only_unconfirmed: bool, log: Path, dry_run: bo
             mt_contour, last_validation(get_log(log, root), ID=ID, frame=f, slice=s,
                                         contour_type=omega)):  # CAVE: hard coded
             click.echo(f"skipping {ID}, ({f}, {s}), {omega}")
+            continue
         loc = (f, s)
         fig, ax = plt.subplots()
         ax.imshow(cines[loc].pixel_array)
@@ -204,10 +205,11 @@ def check_failed(by: str, root: str, log: str):
     failed = log_df.apply(lambda row: not last_validation_was_successful(log_df,
                                                                          by=row["by"],
                                                                          ID=row["ID"],
+                                                                         contour_type=row["contour_type"],
                                                                          frame=row["frame"],
                                                                          slice=row["slice"]), axis=1)
     result = log_df[(log_df["by"] == by) & failed]
-    result = result[["by", "ID", "frame", "slice"]].drop_duplicates()
+    result = result[["by", "ID", "contour_type", "frame", "slice", "remark"]].drop_duplicates()
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         click.echo(result)
         click.echo("----------------")

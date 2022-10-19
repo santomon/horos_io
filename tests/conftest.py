@@ -9,14 +9,14 @@ import pytest
 def horos_test_root():
     return os.path.normpath("./tests/horos_dummy")
 
-SEQ = ['Impression_Cmr0064\\Anonymous_Study - 0\\CINE_segmented_LAX_2Ch_7\\',
-                        'Impression_Cmr0064\\Anonymous_Study - 0\\CINE_segmented_LAX_3Ch_5\\',
-                        'Impression_Cmr0064\\Anonymous_Study - 0\\CINE_segmented_LAX_4Ch_6\\',
-                        'Impression_Cmr0064\\Anonymous_Study - 0\\CINE_segmented_SAX_28\\',
-                        'Impression_Cmr0067\\Anonymous_Study - 0\\CINE_segmented_LAX_2Ch_7\\',
-                        'Impression_Cmr0067\\Anonymous_Study - 0\\CINE_segmented_LAX_3Ch_9\\',
-                        'Impression_Cmr0067\\Anonymous_Study - 0\\CINE_segmented_LAX_4Ch_10\\',
-                        'Impression_Cmr0067\\Anonymous_Study - 0\\CINE_segmented_SAX_53\\']
+SEQ = ['Impression_Cmr0064/Anonymous_Study - 0/CINE_segmented_LAX_2Ch_7/',
+                        'Impression_Cmr0064/Anonymous_Study - 0/CINE_segmented_LAX_3Ch_5/',
+                        'Impression_Cmr0064/Anonymous_Study - 0/CINE_segmented_LAX_4Ch_6/',
+                        'Impression_Cmr0064/Anonymous_Study - 0/CINE_segmented_SAX_28/',
+                        'Impression_Cmr0067/Anonymous_Study - 0/CINE_segmented_LAX_2Ch_7/',
+                        'Impression_Cmr0067/Anonymous_Study - 0/CINE_segmented_LAX_3Ch_9/',
+                        'Impression_Cmr0067/Anonymous_Study - 0/CINE_segmented_LAX_4Ch_10/',
+                        'Impression_Cmr0067/Anonymous_Study - 0/CINE_segmented_SAX_53/']
 N_SLICES = [1, 1, 1, 13, 1, 1, 1, 13]
 
 @pytest.fixture(params=SEQ)

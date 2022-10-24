@@ -26,6 +26,7 @@ for convenience, every location of contours and image seqs, will
 
 CAVE: currently does not respect the fact, that we could have non-CINEs in our data
 """
+import functools
 import os
 import pathlib
 from typing import Union
@@ -129,6 +130,7 @@ def sort_SAX_by_y(X: np.ndarray) -> np.ndarray:
     ).T
 
 
+@functools.lru_cache()
 def get_image_info(root: Path) -> pd.DataFrame:
     """
     checks the root for any Horos Exported Sequences and returns a DataFrame with the information;
@@ -167,6 +169,7 @@ def get_image_info(root: Path) -> pd.DataFrame:
     return result.sort_values(by=["ID", "slice_type"])
 
 
+@functools.lru_cache()
 def get_contour_info(root: Path) -> pd.DataFrame:
     """
     dataframe columns:
@@ -192,6 +195,7 @@ def get_contour_info(root: Path) -> pd.DataFrame:
     return result.sort_values(by=["ID", "slice_type", "contour_type"])
 
 
+@functools.lru_cache()
 def get_combined_info(root: Path) -> pd.DataFrame:
     """
     Args:

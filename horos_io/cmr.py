@@ -141,6 +141,7 @@ def get_image_info(root: Path) -> pd.DataFrame:
     ("seq_path",  <relative path starting from the root of the data>
      "location",  joins the rootdir with seq path
      "ID",        <Impression_Cmr{ID}>
+     "study_data", well, study date
      "slice_type", one of config.slice_types
      "n_frames",
      "n_slices",
@@ -162,7 +163,9 @@ def get_image_info(root: Path) -> pd.DataFrame:
     result["slice_type"] = result["location"].apply(_get_slice_type)
     result["n_frames"] = result["location"].apply(get_n_frames_from_seq_path)
     result["n_slices"] = result["location"].apply(get_n_slices_from_seq_path)
-    result = result[["ID", "slice_type", "n_frames", "n_slices", "seq_path", "location"]]
+
+    # CAVE: why did we do this
+    result = result[["ID", "study_date", "slice_type", "n_frames", "n_slices", "seq_path", "location"]]
 
     if result.shape[0] == 0:
         raise ValueError(f"could not find any images in {root}")

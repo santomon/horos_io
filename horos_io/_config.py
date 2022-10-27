@@ -18,7 +18,7 @@ contour_types = (
     "omega_4ch",
     "omega_3ch",
     "omega_2ch",
-    "omega_sax"
+    "omega_sa"
 )
 
 omega_types = ("omega_sa", "omega_2ch", "omega_3ch", "omega_4ch",)

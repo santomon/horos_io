@@ -1,4 +1,5 @@
 import glob
+import os
 import os.path
 import pathlib
 import sys
@@ -11,6 +12,8 @@ import pydicom
 from decorator import decorator
 from pydicom.errors import InvalidDicomError
 from scipy import interpolate
+
+from horos_io import _config
 
 Path = Union[str, os.PathLike]
 
@@ -97,8 +100,11 @@ def get_log_path(log: str, root: str):
     return log
 
 
-def globSSF(path_name, /, root_dir, **kwargs) -> List[str]:
+def globSSF(path_name, /, root_dir=None, **kwargs) -> List[str]:
     """mimcks behaviour of future globs"""
+    if root_dir is None:
+        return glob.glob(path_name, **kwargs)
+
     return [os.path.relpath(pth, root_dir) for pth in
             glob.glob(os.path.normpath(os.path.join(root_dir, path_name)), **kwargs)]
 
@@ -119,3 +125,10 @@ def mask_from_omega_contour(cines: np.ndarray, contours: Dict[str, np.ndarray], 
     return mask
 
 
+def get_tag(tag: Tuple[str, str], ID: str, root: str) -> str:
+    dicom_paths = globSSF(f"{os.path.join(root, ID, '*/*/*.dcm')}")
+    return pydicom.dcmread(dicom_paths[0])[tag].value
+
+
+def get_study_date(ID: str, root: str) -> str:
+    return get_tag(_config.study_date_tag, ID, root)

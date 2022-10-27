@@ -39,7 +39,7 @@ from tqdm import tqdm
 from horos_io import _config
 from horos_io.core import get_n_frames_from_seq_path, \
     get_n_slices_from_seq_path, _get_name_from_template, get_contour_info_by_type
-from ._utils import _to_str, get_seq_paths
+from ._utils import _to_str, get_seq_paths, get_study_date
 
 Path = Union[os.PathLike, str]
 
@@ -156,6 +156,7 @@ def get_image_info(root: Path) -> pd.DataFrame:
     result["seq_path"] = get_seq_paths(root)
 
     result["ID"] = result["seq_path"].apply(lambda loc: pathlib.Path(loc).parts[0])  # ID is name of the first folder
+    result["study_date"] = result["ID"].apply(functools.partial(get_study_date, root=root))
     result["location"] = [os.path.normpath(os.path.join(root, seq_path))
                           for seq_path in get_seq_paths(root)]
     result["slice_type"] = result["location"].apply(_get_slice_type)

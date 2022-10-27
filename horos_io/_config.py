@@ -30,3 +30,5 @@ omega_2ch_names = ("lv_vol", "la", "lv_wall")
 omega_sa_names = ("rv_vol", "ra", "lv_vol", "lv_wall")
 
 time_format = "%Y/%m/%d, %H:%M:%S"
+
+study_date_tag = ("0040", "0244")

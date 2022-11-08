@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "horos_io"
-version = "0.1.2.14"
+version = "0.1.2.15"
 homepage = "https://github.com/santomon/horos_io"
 description = "small package to deal with data exported from Horos"
 authors = ["Quang Anh Le Hong <qa12_8@yahoo.de>"]

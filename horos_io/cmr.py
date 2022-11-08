@@ -109,7 +109,7 @@ def _get_slice_type(path: Path) -> str:
         return "cine_3ch"
     elif "4ch" in str(path).lower():
         return "cine_4ch"
-    elif "sax" in str(path).lower():
+    elif "_sa" in str(path).lower():
         return "cine_sa"
     else:
         raise ValueError(f"unknown slice type with path: {path}")

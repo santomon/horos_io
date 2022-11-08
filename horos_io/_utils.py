@@ -121,8 +121,70 @@ def mask_from_omega_contour(cines: np.ndarray, contours: Dict[str, np.ndarray], 
             smooth_contour = np.array([(round(px), round(py)) for px, py in zip(xnew, ynew)])
             mask = cv2.drawContours(mask, [smooth_contour], 0, i + 1, - 1)
         else:
-            mask = cv2.drawContours(mask, [np.array(c[loc],dtype=int)], 0, i + 1, -1)
+            aroot_c = interpolate_aroot(c[loc])
+            mask = cv2.drawContours(mask, [np.array(aroot_c, dtype=int)], 0, i + 1, -1)
     return mask
+
+
+def interpolate_aroot(landmarks=List[tuple]) -> List[tuple]:
+    """
+    an aortic root selection of landmarks consists of exactly 6 points; starting with 2 distal points;
+    and then going clockwise;
+
+    interpolates the lateral segments, while using linspace for the horizontal sections;
+
+    Args:
+        landmarks:
+
+    Returns:
+
+    """
+    if not len(landmarks) == 6:
+        raise ValueError(f"aroot needs to have exactly 6 landmarks; instead there are {len(landmarks)}")
+
+    def linspace_interpolation(p1, p2, n=10):
+        result = np.linspace(0, 1, n)[:, np.newaxis] * (np.array(p2) - p1) + p1
+        return result
+
+    def spline_interpolation(seq: List[tuple], n=10) -> List[tuple]:
+        tck, _ = interpolate.splprep([*zip(*seq)], s=0, per=True)
+        xnew, ynew = interpolate.splev(np.linspace(0, 1, n), tck, der=0)
+        return [*zip(xnew, ynew)]
+
+    dist = linspace_interpolation(landmarks[0], landmarks[1])
+    inner = spline_interpolation(landmarks[1:4])
+    prox = linspace_interpolation(landmarks[3], landmarks[4])
+    outer = spline_interpolation(landmarks[-2:] + [landmarks[0]])
+    return dist + inner + prox + outer
+
+
+def masks2spline(masks: np.ndarray):
+    """converts an integer mask into a list of contours"""
+    return [masks == i for i in np.unique(masks)]
+
+
+def mask2spline(mask, ):
+    """
+    Convert a binary mask to a spline.
+
+    Args:
+        mask (ndarray): Binary mask.
+        epsilon (float): The epsilon value for RDP algorithm.
+
+    Returns:
+        x (ndarray): x coordinates of the spline.
+        y (ndarray): y coordinates of the spline.
+    """
+    # Prepare the mask
+    _, thrs = cv2.threshold(mask, 0, 255, cv2.THRESH_OTSU)
+
+    # Find the contour
+    contours, _ = cv2.findContours(thrs, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_NONE)
+    sorted_contours = sorted(contours, key=cv2.contourArea, reverse=True)
+    largest_contour = sorted_contours[0]
+    largest_contour = [(p[0], p[1]) for p in largest_contour]
+
+    return largest_contour
 
 
 def get_tag(tag: Tuple[str, str], ID: str, root: str) -> str:

@@ -3,6 +3,7 @@ import os
 import os.path
 import pathlib
 import sys
+import warnings
 from typing import List, Dict, Union, Optional, Tuple
 
 import cv2
@@ -126,7 +127,7 @@ def mask_from_omega_contour(cines: np.ndarray, contours: Dict[str, np.ndarray], 
     return mask
 
 
-def interpolate_aroot(landmarks=List[tuple]) -> List[tuple]:
+def interpolate_aroot(landmarks: List[tuple]) -> List[tuple]:
     """
     an aortic root selection of landmarks consists of exactly 6 points; starting with 2 distal points;
     and then going clockwise;
@@ -144,12 +145,20 @@ def interpolate_aroot(landmarks=List[tuple]) -> List[tuple]:
 
     def linspace_interpolation(p1, p2, n=10):
         result = np.linspace(0, 1, n)[:, np.newaxis] * (np.array(p2) - p1) + p1
+        result = [(x, y) for x, y in result]
         return result
 
     def spline_interpolation(seq: List[tuple], n=10) -> List[tuple]:
-        tck, _ = interpolate.splprep([*zip(*seq)], s=0, per=True)
-        xnew, ynew = interpolate.splev(np.linspace(0, 1, n), tck, der=0)
-        return [*zip(xnew, ynew)]
+        """use basis shift and do a natural cubic spline interp. and shift back"""
+        new_base = np.column_stack([
+            v1 := np.array(seq[-1]) - seq[0],
+            [-v1[1], v1[0]]
+        ])
+        transformed_seq = (np.linalg.inv(new_base) @ np.array(seq).T).T
+        sp = interpolate.CubicSpline(*transformed_seq.T, bc_type="natural")
+        new_seq = sp(np.linspace(transformed_seq[0, 0], transformed_seq[-1, 0], n)) # take x coords of seq endpoints
+        result = [(x, y) for x, y in (new_base @ new_seq.T).T]
+        return result
 
     dist = linspace_interpolation(landmarks[0], landmarks[1])
     inner = spline_interpolation(landmarks[1:4])
@@ -160,7 +169,7 @@ def interpolate_aroot(landmarks=List[tuple]) -> List[tuple]:
 
 def masks2spline(masks: np.ndarray):
     """converts an integer mask into a list of contours"""
-    return [masks == i for i in np.unique(masks)]
+    return [masks2spline(masks == i) for i in np.unique(masks)]
 
 
 def mask2spline(mask, ):

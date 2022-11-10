@@ -176,6 +176,7 @@ def mask2spline(mask, ):
         y (ndarray): y coordinates of the spline.
     """
     # Prepare the mask
+    warnings.warn(DeprecationWarning("dont use horos_io.mask2spline for now..."))
     if not mask.any():
         return np.nan
     _, thrs = cv2.threshold(mask, 0, 255, cv2.THRESH_OTSU)

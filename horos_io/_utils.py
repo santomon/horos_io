@@ -156,15 +156,18 @@ def interpolate_aroot(landmarks: List[tuple]) -> List[tuple]:
         ])
         transformed_seq = (np.linalg.inv(new_base) @ np.array(seq).T).T
         sp = interpolate.CubicSpline(*transformed_seq.T, bc_type="natural")
-        new_seq = sp(np.linspace(transformed_seq[0, 0], transformed_seq[-1, 0], n)) # take x coords of seq endpoints
-        result = [(x, y) for x, y in (new_base @ new_seq.T).T]
+        xs = np.linspace(transformed_seq[0, 0], transformed_seq[-1, 0], n)
+        ys = sp(xs)  # take x coords of seq endpoints
+        result = [(x, y) for x, y in (new_base @ [xs, ys]).T]
+
         return result
 
     dist = linspace_interpolation(landmarks[0], landmarks[1])
     inner = spline_interpolation(landmarks[1:4])
     prox = linspace_interpolation(landmarks[3], landmarks[4])
     outer = spline_interpolation(landmarks[-2:] + [landmarks[0]])
-    return dist + inner + prox + outer
+    result = dist + inner + prox + outer
+    return result
 
 
 def masks2spline(masks: np.ndarray):

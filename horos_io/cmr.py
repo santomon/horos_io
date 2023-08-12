@@ -103,7 +103,13 @@ def load_lax_sequence(path_to_sequence: Path) -> np.ndarray:
 
 
 def _get_slice_type(path: Path) -> str:
-    if "2ch" in str(path).lower():
+    if ("dynamic" in str(path).lower() or "perf" in str(path).lower()) and "b1s" in str(path).lower():
+        return "perfusion_b1s"
+    elif ("dynamic" in str(path).lower() or "perf" in str(path).lower()) and "b2s" in str(path).lower():
+        return "perfusion_b2s"
+    elif ("dynamic" in str(path).lower() or "perf" in str(path).lower()) and "b3s" in str(path).lower():
+        return "perfusion_b3s"
+    elif "2ch" in str(path).lower():
         return "cine_2ch"
     elif "3ch" in str(path).lower():
         return "cine_3ch"

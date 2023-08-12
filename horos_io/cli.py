@@ -259,6 +259,7 @@ def check_existing_contours(contour_types: typing.List[str], root: str, n: Optio
         eligible.loc[:, "valid"] = eligible.apply(
             lambda row: contour_is_valid(load_horos_contour(row["location_contour"], row["location_images"]), n),
             axis=1)
+        click.echo(f"for contour type {contour_type} this needs checking:")
         click.echo(eligible[eligible["valid"] != True][["ID", "contour_path", "contour_type"]])
 
     click.echo("finished checking")

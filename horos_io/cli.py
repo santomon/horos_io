@@ -81,7 +81,7 @@ def make_image_info_csv(root: Path,
 @click.option("--root", default=".", help="directory to the Horos Dataset")
 @click.option("--silent", default=False, is_flag=True, help="if set, will not print out the result")
 @click.option("--out", default=None,
-              help="how the image_info,csv should be saved; if not specified, will save an image_info.csv in root")
+              help="how the image_info,csv should be saved; if not specified, will save an contour_info.csv in root")
 def make_contour_info_csv(root: Path, out: Optional[Path], silent: bool) -> NoReturn:
     """
     one-time operation to update the information of the dataset;

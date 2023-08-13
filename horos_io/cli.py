@@ -12,18 +12,22 @@ from typing import Optional, NoReturn
 import click
 import pandas as pd
 from tqdm import tqdm
+import SimpleITK as sitk
 
-from horos_io import load_horos_contour
+import horos_io
+from horos_io import load_horos_contour, _config
 from horos_io._utils import globSSF, mask_from_omega_contour, get_log, get_log_path
 from horos_io.cmr import Path, get_image_info, get_contour_info, get_combined_info
 from horos_io.ui import shitty_manual_confirm
 from horos_io.validation import visually_confirm_omega_iter, write_log, last_validation_was_successful, \
     contour_is_valid, changed_since_last_validation, last_validation
 import matplotlib
+
 if sys.platform == "darwin":
     matplotlib.use("macosx")
 
 from matplotlib import pyplot as plt
+
 
 @click.group()
 def main():
@@ -265,10 +269,54 @@ def check_existing_contours(contour_types: typing.List[str], root: str, n: Optio
     click.echo("finished checking")
 
 
+@click.command()
+@click.option("--root", default=".", help="source root to the Horos dataset")
+@click.option("--out", default=".", help="directory to export the nii gz files dataset")
+def as_2d_niigz(root: str, out: str):
+    """
+    CAVE: for perfusion we have MOCO and no-moco seqs, but the contour types make no distinction here;
+    currently the correct matching is hard coded;
+    creates a nii gz nnunet ready folder structure for training with nnunet 🤔
+
+    Args:
+        root:
+        out:
+
+    Returns:
+
+    """
+    dst_images = os.path.join(out, _config.nn_UNet_raw_database, "nnUNet_raw_data", _config.task_name, f"images{'Tr'}")
+    dst_contours = os.path.join(out, _config.nn_UNet_raw_database, "nnUNet_raw_data", _config.task_name, f"labels{'Tr'}")
+
+    os.makedirs(dst_images, exist_ok=True)
+    os.makedirs(dst_contours, exist_ok=True)
+
+    combined_info = get_combined_info(root)
+    # dropping the moco ones, since we drew in no moco
+    combined_info = combined_info[combined_info["seq_path"].apply(lambda pth: "MOCO" not in pth)]
+
+
+    index = 0
+    for i, row in combined_info.iterrows():
+        seq = horos_io.load_lax_sequence(row["location_images"])
+        c = load_horos_contour(row["location_contour"], seq)
+
+        for frame, maybe_contour in enumerate(list(c.values())[0]):
+            if maybe_contour:
+                mask = mask_from_omega_contour(seq, c,  frame)
+                sitk_image = sitk.GetImageFromArray(seq[frame].pixel_array)
+                sitk_mask = sitk.GetImageFromArray(mask)
+                sitk.WriteImage(sitk_image, os.path.join(dst_images, f"{index:04d}.nii.gz"))
+                sitk.WriteImage(sitk_mask, os.path.join(dst_contours, f"{index:04d}.nii.gz"))
+                index += 1
+    click.echo("Finished extracting...")
+
+
 main.add_command(make_image_info_csv)
 main.add_command(make_contour_info_csv)
 main.add_command(rename_contour_files)
 main.add_command(validate)
+main.add_command(as_2d_niigz)
 main.add_command(check)
 check.add_command(check_failed)
 check.add_command(check_unobserved)

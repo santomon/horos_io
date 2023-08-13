@@ -34,6 +34,7 @@ opencv-python = "^4.6.0.66"
 tqdm = "^4.64.1"
 decorator = "^5.1.1"
 nibabel = "^4.0.2"
+simpleitk = "^2.2.1"
 
 [tool.poetry.dev-dependencies]
 bumpversion = "*"

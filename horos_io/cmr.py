@@ -103,19 +103,20 @@ def load_lax_sequence(path_to_sequence: Path) -> np.ndarray:
 
 
 def _get_slice_type(path: Path) -> str:
-    if ("dynamic" in str(path).lower() or "perf" in str(path).lower()) and "b1s" in str(path).lower():
+    path = str(path).lower()
+    if ("dynamic" in path or "perf" in path) and "b1s" in path:
         return "perfusion_b1s"
-    elif ("dynamic" in str(path).lower() or "perf" in str(path).lower()) and "b2s" in str(path).lower():
+    elif ("dynamic" in path or "perf" in path) and "b2s" in path:
         return "perfusion_b2s"
-    elif ("dynamic" in str(path).lower() or "perf" in str(path).lower()) and "b3s" in str(path).lower():
+    elif ("dynamic" in path or "perf" in path) and "b3s" in path:
         return "perfusion_b3s"
-    elif "2ch" in str(path).lower():
+    elif "2ch" in path:
         return "cine_2ch"
-    elif "3ch" in str(path).lower():
+    elif "3ch" in path:
         return "cine_3ch"
-    elif "4ch" in str(path).lower():
+    elif "4ch" in path:
         return "cine_4ch"
-    elif "sax" in str(path).lower() or "_sa" in str(path).lower():
+    elif "sax" in path or "_sa" in path:
         return "cine_sa"
     else:
         raise ValueError(f"unknown slice type with path: {path}")

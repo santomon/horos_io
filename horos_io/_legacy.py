@@ -56,6 +56,6 @@ def load_sax_sequence(path_to_sequence: Path, basal_first: bool) -> np.ndarray:
     return np.array([[
         pydicom.dcmread(os.path.join(path_to_sequence,
                                      _get_name_from_template(path_to_sequence,
-                                                             fr"IM-\d\d\d\d-00{_to_str(f + 1)}-00{_to_str(s + 1)}.dcm")))
+                                                             fr"IM-\d\d\d\d-{f+1:04d}-{s+1:04d}.dcm")))
         for s in range(n_slices)[::ordering]]
         for f in range(n_frames)])

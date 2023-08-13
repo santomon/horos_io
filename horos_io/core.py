@@ -138,8 +138,11 @@ def load_horos_contour(path_to_contour: Path, sequence: Union[np.ndarray, tuple,
     """
     if len(sequence) == 2:
         n_frames, n_slices = sequence
-    elif isinstance(sequence, np.ndarray):
+    elif isinstance(sequence, np.ndarray) and len(sequence.shape) > 1:
         n_frames, n_slices, *rest = sequence.shape
+    elif isinstance(sequence, np.ndarray):
+        n_frames = sequence.shape[0]
+        n_slices = 1
     else:
         # has to be a path or sth; if not, this should automatically result in an error
         n_frames = get_n_frames_from_seq_path(sequence)

@@ -41,6 +41,6 @@ time_format = "%Y/%m/%d, %H:%M:%S"
 study_date_tag = ("0040", "0244")
 
 
-task_id = 705
-task_name = f"Task{task_id}_Perfusion"
+task_id = "033"
+task_name = f"Dataset{task_id}_Perfusion"
 nn_UNet_raw_database = "nnUNet_raw_data_base"

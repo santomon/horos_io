@@ -12,7 +12,6 @@ classifiers=[
     'Intended Audience :: Developers',
     'License :: OSI Approved :: MIT License',
     'Natural Language :: English',
-    'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
@@ -23,7 +22,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8, <3.12"
+python = ">=3.9, <3.12"
 click = "*"
 pandas = "^1.4.4"
 pydicom = "^2.3.0"
@@ -35,7 +34,7 @@ tqdm = "^4.64.1"
 decorator = "^5.1.1"
 nibabel = "^4.0.2"
 simpleitk = "^2.2.1"
-nnunet = {git = "https://github.com/MIC-DKFZ/nnUNet.git", rev = "nnunetv1"}
+nnunetv2 = "^2.1"
 
 [tool.poetry.dev-dependencies]
 bumpversion = "*"

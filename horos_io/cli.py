@@ -16,7 +16,7 @@ import SimpleITK as sitk
 
 import horos_io
 from horos_io import load_horos_contour, _config
-from nnunet.dataset_conversion.utils import generate_dataset_json
+from nnunetv2.dataset_conversion.generate_dataset_json import generate_dataset_json
 from horos_io._utils import globSSF, mask_from_omega_contour, get_log, get_log_path
 from horos_io.cmr import Path, get_image_info, get_contour_info, get_combined_info
 from horos_io.ui import shitty_manual_confirm
@@ -286,7 +286,7 @@ def as_2d_niigz(root: str, out: str):
     Returns:
 
     """
-    dst_dataset_json = os.path.join(out, _config.nn_UNet_raw_database, "nnUNet_raw_data", _config.task_name, "dataset.json")
+    dst_dataset_json = os.path.join(out, _config.nn_UNet_raw_database, "nnUNet_raw_data", _config.task_name)
     dst_images = os.path.join(out, _config.nn_UNet_raw_database, "nnUNet_raw_data", _config.task_name, f"images{'Tr'}")
     dst_contours = os.path.join(out, _config.nn_UNet_raw_database, "nnUNet_raw_data", _config.task_name, f"labels{'Tr'}")
 
@@ -308,7 +308,7 @@ def as_2d_niigz(root: str, out: str):
                 mask = mask_from_omega_contour(seq, c,  frame)
                 sitk_image = sitk.GetImageFromArray(seq[frame].pixel_array)
                 sitk_mask = sitk.GetImageFromArray(mask)
-                sitk.WriteImage(sitk_image, os.path.join(dst_images, f"0000_{index:04d}.nii.gz"))
+                sitk.WriteImage(sitk_image, os.path.join(dst_images, f"{index:04d}_0000.nii.gz"))
                 sitk.WriteImage(sitk_mask, os.path.join(dst_contours, f"{index:04d}.nii.gz"))
                 index += 1
 
@@ -316,8 +316,11 @@ def as_2d_niigz(root: str, out: str):
         dst_dataset_json,
         imagesTr_dir=dst_images,
         imagesTs_dir=None,
-        modalities=("MR",),
-        labels={1: "rv", 2: "lv_epi", 3: "lv_endo"},
+        channel_names={0: "MR"},
+        # modalities=("MR",),
+        num_training_cases=34,
+        file_ending="nii.gz",
+        labels={"rv": 1,  "lv_epi": 2,  "lv_endo": 3},
         dataset_name="eksdee",
     )
     click.echo("Finished extracting...")

@@ -1,0 +1,3 @@
+- add an export where we put 3 images before and after as "modality" for 2d segmentation 🤔
+- train a model with this configuration 🤔
+- 

@@ -273,7 +273,9 @@ def check_existing_contours(contour_types: typing.List[str], root: str, n: Optio
 @click.command()
 @click.option("--root", default=".", help="source root to the Horos dataset")
 @click.option("--out", default=".", help="directory to export the nii gz files dataset")
-def as_2d_niigz(root: str, out: str):
+@click.option("--n_before_and_after", default=0, help="adds n images before and after as '''modality'''")
+@click.option("--dataset_name", default=_config.task_name, help="dataset name")
+def as_2d_niigz(root: str, out: str, n_before_and_after: int, dataset_name: str):
     """
     CAVE: for perfusion we have MOCO and no-moco seqs, but the contour types make no distinction here;
     currently the correct matching is hard coded;
@@ -286,9 +288,9 @@ def as_2d_niigz(root: str, out: str):
     Returns:
 
     """
-    dst_dataset_json = os.path.join(out, _config.nn_UNet_raw_database, "nnUNet_raw_data", _config.task_name)
-    dst_images = os.path.join(out, _config.nn_UNet_raw_database, "nnUNet_raw_data", _config.task_name, f"images{'Tr'}")
-    dst_contours = os.path.join(out, _config.nn_UNet_raw_database, "nnUNet_raw_data", _config.task_name, f"labels{'Tr'}")
+    dst_dataset_json = os.path.join(out, _config.nn_UNet_raw_database, "nnUNet_raw_data", dataset_name)
+    dst_images = os.path.join(out, _config.nn_UNet_raw_database, "nnUNet_raw_data", dataset_name, f"images{'Tr'}")
+    dst_contours = os.path.join(out, _config.nn_UNet_raw_database, "nnUNet_raw_data", dataset_name, f"labels{'Tr'}")
 
     os.makedirs(dst_images, exist_ok=True)
     os.makedirs(dst_contours, exist_ok=True)
@@ -306,17 +308,18 @@ def as_2d_niigz(root: str, out: str):
         for frame, maybe_contour in enumerate(list(c.values())[0]):
             if maybe_contour:
                 mask = mask_from_omega_contour(seq, c,  frame)
-                sitk_image = sitk.GetImageFromArray(seq[frame].pixel_array)
                 sitk_mask = sitk.GetImageFromArray(mask)
-                sitk.WriteImage(sitk_image, os.path.join(dst_images, f"perfusion_{index:04d}_0000.nii.gz"))
                 sitk.WriteImage(sitk_mask, os.path.join(dst_contours, f"perfusion_{index:04d}.nii.gz"))
+                for modality_index, _f in enumerate(range(frame - n_before_and_after, frame + n_before_and_after + 1)):
+                    sitk_image = sitk.GetImageFromArray(seq[_f].pixel_array)
+                    sitk.WriteImage(sitk_image, os.path.join(dst_images, f"perfusion_{index:04d}_{modality_index:04d}.nii.gz"))
                 index += 1
 
     generate_dataset_json(
         dst_dataset_json,
         imagesTr_dir=dst_images,
         imagesTs_dir=None,
-        channel_names={0: "MR"},
+        channel_names={modality_index_: "MR" for modality_index_ in range(n_before_and_after * 2 + 1)},
         # modalities=("MR",),
         num_training_cases=index,
         file_ending=".nii.gz",

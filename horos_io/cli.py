@@ -308,8 +308,8 @@ def as_2d_niigz(root: str, out: str):
                 mask = mask_from_omega_contour(seq, c,  frame)
                 sitk_image = sitk.GetImageFromArray(seq[frame].pixel_array)
                 sitk_mask = sitk.GetImageFromArray(mask)
-                sitk.WriteImage(sitk_image, os.path.join(dst_images, f"{index:04d}_0000.nii.gz"))
-                sitk.WriteImage(sitk_mask, os.path.join(dst_contours, f"{index:04d}.nii.gz"))
+                sitk.WriteImage(sitk_image, os.path.join(dst_images, f"perfusion_{index:04d}_0000.nii.gz"))
+                sitk.WriteImage(sitk_mask, os.path.join(dst_contours, f"perfusion_{index:04d}.nii.gz"))
                 index += 1
 
     generate_dataset_json(
@@ -318,9 +318,9 @@ def as_2d_niigz(root: str, out: str):
         imagesTs_dir=None,
         channel_names={0: "MR"},
         # modalities=("MR",),
-        num_training_cases=34,
-        file_ending="nii.gz",
-        labels={"rv": 1,  "lv_epi": 2,  "lv_endo": 3},
+        num_training_cases=index,
+        file_ending=".nii.gz",
+        labels={"background": 0, "rv": 1,  "lv_epi": 2,  "lv_endo": 3},
         dataset_name="eksdee",
     )
     click.echo("Finished extracting...")

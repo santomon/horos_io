@@ -1,4 +1,4 @@
-slice_types = ("cine_sa", "cine_2ch", "cine_3ch", "cine_4ch", "perfusion_b3s", "perfusion_b2s", "perfusion_b1s")
+slice_types = ("cine_sa", "cine_2ch", "cine_3ch", "cine_4ch", "perfusion_b3s", "perfusion_b3s_moco", "perfusion_b2s", "perfusion_b2s_moco", "perfusion_b1s", "perfusion_b1s_moco")
 
 contour_types = (
     "sax_lv_endo",
@@ -20,12 +20,25 @@ contour_types = (
     "omega_2ch",
     "omega_sa",
     "omega_perf_b1s",
+    "omega_perf_b1s_moco",
     "omega_perf_b2s",
+    "omega_perf_b2s_moco",
     "omega_perf_b3s",
-
+    "omega_perf_b3s_moco"
 )
 
-omega_types = ("omega_sa", "omega_2ch", "omega_3ch", "omega_4ch", "omega_perf_b1s", "omega_perf_b2s", "omega_perf_b3s")
+omega_types = (
+    "omega_sa",
+    "omega_2ch",
+    "omega_3ch",
+    "omega_4ch",
+    "omega_perf_b1s",
+    "omega_perf_b1s_moco",
+    "omega_perf_b2s",
+    "omega_perf_b2s_moco",
+    "omega_perf_b3s",
+    "omega_perf_b3s_moco"
+)
 
 # TODO: omega_3ch_names, omega_2ch_names, omega_sax_names
 omega_4ch_names = ("rv_vol", "lv_vol", "ra", "la", "lv_wall")  # now also denotes plotting order
@@ -35,6 +48,9 @@ omega_sa_names = ("rv_vol", "lv_wall", "lv_vol")
 omega_perf_b1s_names = ("rv_vol", "lv_wall", "lv_vol")
 omega_perf_b2s_names = ("rv_vol", "lv_wall", "lv_vol")
 omega_perf_b3s_names = ("rv_vol", "lv_wall", "lv_vol")
+omega_perf_b1s_moco_names = ("rv_vol", "lv_wall", "lv_vol")
+omega_perf_b2s_moco_names = ("rv_vol", "lv_wall", "lv_vol")
+omega_perf_b3s_moco_names = ("rv_vol", "lv_wall", "lv_vol")
 
 time_format = "%Y/%m/%d, %H:%M:%S"
 

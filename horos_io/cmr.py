@@ -104,7 +104,13 @@ def load_lax_sequence(path_to_sequence: Path) -> np.ndarray:
 
 def _get_slice_type(path: Path) -> str:
     path = str(path).lower()
-    if ("dynamic" in path or "perf" in path) and "b1s" in path:
+    if ("dynamic" in path or "perf" in path) and ("b1s" in path) and ("moco" in path):
+        return "perfusion_b1s_moco"
+    elif ("dynamic" in path or "perf" in path) and ("b2s" in path) and ("moco" in path):
+        return "perfusion_b2s_moco"
+    elif ("dynamic" in path or "perf" in path) and ("b3s" in path) and ("moco" in path):
+        return "perfusion_b3s_moco"
+    elif ("dynamic" in path or "perf" in path) and "b1s" in path:
         return "perfusion_b1s"
     elif ("dynamic" in path or "perf" in path) and "b2s" in path:
         return "perfusion_b2s"

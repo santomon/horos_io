@@ -24,7 +24,10 @@ contour_types = (
     "omega_perf_b2s",
     "omega_perf_b2s_moco",
     "omega_perf_b3s",
-    "omega_perf_b3s_moco"
+    "omega_perf_b3s_moco",
+    "silhouette_perf_b1s",
+    "silhouette_perf_b2s",
+    "silhouette_perf_b3s",
 )
 
 omega_types = (
@@ -38,6 +41,9 @@ omega_types = (
     "omega_perf_b2s_moco",
     "omega_perf_b3s",
     "omega_perf_b3s_moco"
+    "silhouette_perf_b1s",
+    "silhouette_perf_b2s",
+    "silhouette_perf_b3s",
 )
 
 # TODO: omega_3ch_names, omega_2ch_names, omega_sax_names
@@ -51,6 +57,9 @@ omega_perf_b3s_names = ("rv_vol", "lv_wall", "lv_vol")
 omega_perf_b1s_moco_names = ("rv_vol", "lv_wall", "lv_vol")
 omega_perf_b2s_moco_names = ("rv_vol", "lv_wall", "lv_vol")
 omega_perf_b3s_moco_names = ("rv_vol", "lv_wall", "lv_vol")
+silhouette_perf_b1s_names = ("silhouette", )
+silhouette_perf_b2s_names = ("silhouette", )
+silhouette_perf_b3s_names = ("silhouette", )
 
 time_format = "%Y/%m/%d, %H:%M:%S"
 

@@ -28,6 +28,7 @@ def _get_name_from_template(path_to_sequence: Path, template: str) -> str:
 
 
 def _load_horos_contour(contour_path: Path, n_frames: int, n_slices: int,
+                        index_if_Area: int = None,
                         filter_: Callable[[ET.Element], bool] = __always_true) -> np.ndarray:
     """
     to really understand this file format; getting elements should really be smarter than indexing with integers
@@ -35,6 +36,8 @@ def _load_horos_contour(contour_path: Path, n_frames: int, n_slices: int,
     simply loads the contour from the contour path;
     Args:
         contour_path: path to contour .xml file
+        index_if_Area: if not None, will attempt to use the ith contour in the file instead of raising an error;
+            only do this if the contour loaded ends up of name "Area"
         n_frames: number of frames of the corresponding sequence
         n_slices: number of slices of the corresponding sequence; if 1-Dim; e.g. LAX, then 1 should be passed
         filter_: takes an element at per-Image level (can have multiple ROIs; and decides on some criterion if it should be taken);
@@ -57,10 +60,27 @@ def _load_horos_contour(contour_path: Path, n_frames: int, n_slices: int,
             # multiple contours can exist for every image
             if filter_(roi):
                 result[f, s] = [eval(point.text) for point in roi[23]]
+                break  # there cannot be multiple instances of a contour type in a slice
+        else:
+            if index_if_Area:
+                try:
+                    roi = elem[5][index_if_Area]
+                    if (roi[17].text == "Area") or (roi[17].text == "Unnamed"):
+                        result[f, s] = [eval(point.text) for point in roi[23]]
+                    else:
+                        raise ValueError(f"if generating omega contours and relying on drawing order, all contours must"
+                                         f" be unnamed (i.e. named Area)"
+                                         f"")
+                except IndexError as e:
+                    # raise e
+                    pass
+
     return result if result.shape[1] > 1 else result.reshape(result.shape[0])
 
 
-def _load_omega_contour(contour_path: Path, n_frames: int, n_slices: int) -> Dict[str, np.ndarray]:
+def _load_omega_contour(contour_path: Path, n_frames: int, n_slices: int,
+                        use_drawing_order: bool = False,
+                        ) -> Dict[str, np.ndarray]:
     """
     Args:
         contour_path:
@@ -71,9 +91,16 @@ def _load_omega_contour(contour_path: Path, n_frames: int, n_slices: int) -> Dic
     """
     # any contour should be named <Path>/omega_{slice_type}.xml
     omega = os.path.split(contour_path)[1].split(".")[0]
-    result = {contour_name: _load_horos_contour(contour_path, n_frames, n_slices,
-                                                filter_=partial(_filter_by_contour_name, contour_name))
-              for contour_name in getattr(_config, f"{omega}_names")}
+    if not use_drawing_order:
+        result = {contour_name: _load_horos_contour(contour_path, n_frames, n_slices,
+                                                    filter_=partial(_filter_by_contour_name, contour_name))
+                  for contour_name in getattr(_config, f"{omega}_names")}
+    else:
+        result = {contour_name: _load_horos_contour(contour_path, n_frames, n_slices,
+                                                    index_if_Area=i,
+                                                    filter_=partial(_filter_by_contour_name, contour_name))
+                  for i, contour_name in enumerate(getattr(_config, f"{omega}_names"))}
+
     return result
 
 
@@ -118,7 +145,9 @@ def get_n_slices_from_seq_path(path_to_sequence: Path) -> int:
         return max([int(slice_idx) for slice_idx in slice_idxs])
 
 
-def load_horos_contour(path_to_contour: Path, sequence: Union[np.ndarray, tuple, Path]) -> Union[
+def load_horos_contour(path_to_contour: Path, sequence: Union[np.ndarray, tuple, Path],
+                       use_drawing_order: bool = False,
+                       ) -> Union[
     np.ndarray, Dict[str, np.ndarray]]:
     """
     Args:
@@ -147,10 +176,10 @@ def load_horos_contour(path_to_contour: Path, sequence: Union[np.ndarray, tuple,
         # has to be a path or sth; if not, this should automatically result in an error
         n_frames = get_n_frames_from_seq_path(sequence)
         n_slices = get_n_slices_from_seq_path(sequence)
-    if "omega" not in path_to_contour:
+    if "omega" not in path_to_contour and "silhouette" not in path_to_contour:
         return _load_horos_contour(path_to_contour, n_frames, n_slices)
     else:
-        return _load_omega_contour(path_to_contour, n_frames, n_slices)
+        return _load_omega_contour(path_to_contour, n_frames, n_slices, use_drawing_order=use_drawing_order)
 
 
 def load_horos_contour_unstructured(contour_path: Path) -> List[Tuple[int, str, List[Tuple[float, float]]]]:

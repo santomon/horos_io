@@ -336,8 +336,7 @@ def as_2d_niigz(root: str, out: str, n_before_and_after: int, dataset_name: str)
 @click.option("--out", default=".", help="directory to export the nii gz files dataset")
 @click.option("--val-folder", default=None, help="optional validation folder to show silhouettes")
 @click.option("--n_before_and_after", default=0, help="adds n images before and after as '''modality'''")
-@click.option("--dataset_name", default=_config.task_name, help="dataset name")
-def make_silhouette_data(root: str, out: str, n_before_and_after: int, dataset_name: str, val_folder):
+def make_silhouette_data(root: str, out: str, n_before_and_after: int, val_folder):
     """
     CAVE: for perfusion we have MOCO and no-moco seqs, but the contour types make no distinction here;
     currently the correct matching is hard coded;
@@ -350,6 +349,7 @@ def make_silhouette_data(root: str, out: str, n_before_and_after: int, dataset_n
     Returns:
 
     """
+    dataset_name = "Dataset034_Perfusion_Silhouette"
     dst_dataset_json = os.path.join(out, _config.nn_UNet_raw_database, "nnUNet_raw_data", dataset_name)
     dst_images = os.path.join(out, _config.nn_UNet_raw_database, "nnUNet_raw_data", dataset_name, f"images{'Tr'}")
     dst_contours = os.path.join(out, _config.nn_UNet_raw_database, "nnUNet_raw_data", dataset_name, f"labels{'Tr'}")

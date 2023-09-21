@@ -365,7 +365,8 @@ def make_silhouette_data(root: str, out: str, n_before_and_after: int, val_folde
     index = 0
     for i, row in combined_info.iterrows():
         seq = horos_io.load_lax_sequence(row["location_images"])
-        c = load_horos_contour(row["location_contour"], seq, use_drawing_order=True)
+        c = load_horos_contour(row["location_contour"], seq, use_drawing_order=True,
+                               to_ignore_if_index=_config.omega_perf_b1s_names)
 
         for frame, maybe_contour in enumerate(list(c.values())[0]):
 

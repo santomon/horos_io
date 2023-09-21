@@ -62,7 +62,7 @@ def _load_horos_contour(contour_path: Path, n_frames: int, n_slices: int,
                 result[f, s] = [eval(point.text) for point in roi[23]]
                 break  # there cannot be multiple instances of a contour type in a slice
         else:
-            if index_if_Area:
+            if index_if_Area is not None:
                 try:
                     roi = elem[5][index_if_Area]
                     if (roi[17].text == "Area") or (roi[17].text == "Unnamed"):

@@ -334,6 +334,66 @@ def as_2d_niigz(root: str, out: str, n_before_and_after: int, dataset_name: str)
 @click.command()
 @click.option("--root", default=".", help="source root to the Horos dataset")
 @click.option("--out", default=".", help="directory to export the nii gz files dataset")
+@click.option("--n_before_and_after", default=0, help="adds n images before and after as '''modality'''")
+@click.option("--dataset_name", default=_config.task_name, help="dataset name")
+def make_with_silhouette_segmentation(root: str, out: str, dataset_name: str):
+    """
+    CAVE: for perfusion we have MOCO and no-moco seqs, but the contour types make no distinction here;
+    currently the correct matching is hard coded;
+    creates a nii gz nnunet ready folder structure for training with nnunet 🤔
+
+    Args:
+        root:
+        out:
+
+    Returns:
+
+    """
+    dst_dataset_json = os.path.join(out, _config.nn_UNet_raw_database, "nnUNet_raw_data", dataset_name)
+    dst_images = os.path.join(out, _config.nn_UNet_raw_database, "nnUNet_raw_data", dataset_name, f"images{'Tr'}")
+    dst_contours = os.path.join(out, _config.nn_UNet_raw_database, "nnUNet_raw_data", dataset_name, f"labels{'Tr'}")
+
+    os.makedirs(dst_images, exist_ok=True)
+    os.makedirs(dst_contours, exist_ok=True)
+
+    combined_info = get_combined_info(root)
+    # dropping the moco ones, since we drew in no moco
+    combined_info = combined_info[combined_info["seq_path"].apply(lambda pth: "MOCO" not in pth)]
+
+
+    index = 0
+    for i, row in combined_info.iterrows():
+        if "silhouette" in row["contour_type"]:
+            continue
+        seq = horos_io.load_lax_sequence(row["location_images"])
+        c = load_horos_contour(row["location_contour"], seq)
+
+        for frame, maybe_contour in enumerate(list(c.values())[0]):
+            if maybe_contour:
+                mask = mask_from_omega_contour(seq, c,  frame)
+                sitk_mask = sitk.GetImageFromArray(mask)
+                sitk_silhouette = sitk.GetImageFromArray(mask > 0)
+                sitk.WriteImage(sitk_mask, os.path.join(dst_contours, f"perfusion_{index:04d}.nii.gz"))
+                sitk_image = sitk.GetImageFromArray(seq[frame].pixel_array)
+                sitk.WriteImage(sitk_image, os.path.join(dst_images, f"perfusion_{index:04d}_{0:04d}.nii.gz"))
+                sitk.WriteImage(sitk_silhouette, os.path.join(dst_images, f"perfusion_{index:04d}_{1:04d}.nii.gz"))
+                index += 1
+
+    generate_dataset_json(
+        dst_dataset_json,
+        imagesTr_dir=dst_images,
+        imagesTs_dir=None,
+        channel_names={0: "MR", 1: "MR"},
+        # modalities=("MR",),
+        num_training_cases=index,
+        file_ending=".nii.gz",
+        labels={"background": 0, "rv": 1,  "lv_epi": 2,  "lv_endo": 3},
+        dataset_name="eksdee",
+    )
+    click.echo("Finished extracting...")
+@click.command()
+@click.option("--root", default=".", help="source root to the Horos dataset")
+@click.option("--out", default=".", help="directory to export the nii gz files dataset")
 @click.option("--val-folder", default=None, help="optional validation folder to show silhouettes")
 @click.option("--n_before_and_after", default=0, help="adds n images before and after as '''modality'''")
 def make_silhouette_data(root: str, out: str, n_before_and_after: int, val_folder):
